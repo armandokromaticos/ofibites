@@ -26,7 +26,6 @@ import {
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
-import { Role } from "../../../core/domain/enums/role.enum";
 import { Lang } from "../../../core/domain/enums/lang.enum";
 import { AdminOnly } from "../../auth/decorators/admin-only.decorator";
 
@@ -65,8 +64,6 @@ import {
 } from "../../../core/application/use-cases/products/upload-product-image.use-case";
 import { AssignTagsToProductUseCase } from "../../../core/application/use-cases/products/assign-tags-to-product.use-case";
 import { RemoveTagFromProductUseCase } from "../../../core/application/use-cases/products/remove-tag-from-product.use-case";
-import { GetProductStandsUseCase } from "../../../core/application/use-cases/stand-catalog/get-product-stands.use-case";
-import { StandResponseDto } from "../../../core/application/dto/stands/stand-response.dto";
 
 // Use Cases - Sizes
 import { CreateProductSizeUseCase } from "../../../core/application/use-cases/product-sizes/create-product-size.use-case";
@@ -117,7 +114,6 @@ export class ProductsController {
     private readonly assignTagsToModifierUseCase: AssignTagsToModifierUseCase,
     private readonly removeTagFromModifierUseCase: RemoveTagFromModifierUseCase,
     private readonly setModifierSizePricesUseCase: SetModifierSizePricesUseCase,
-    private readonly getProductStandsUseCase: GetProductStandsUseCase,
   ) {}
 
   // ── Products ──
@@ -487,15 +483,4 @@ export class ProductsController {
     await this.removeTagFromProductUseCase.execute(id, tagId);
   }
 
-  // ── Product Stands ──
-
-  @Get(":id/stands")
-  @AdminOnly(Role.ADMIN, Role.CATALOG_MANAGER)
-  @ApiOperation({ summary: "Ver en qué stands está disponible un producto" })
-  async getProductStands(
-    @Param("id", ParseUUIDPipe) id: string,
-  ): Promise<StandResponseDto[]> {
-    const stands = await this.getProductStandsUseCase.execute(id);
-    return stands.map((stand) => stand.toResponseDto());
-  }
 }

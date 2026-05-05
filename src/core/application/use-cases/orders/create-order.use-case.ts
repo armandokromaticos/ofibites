@@ -4,8 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { randomUUID, randomInt } from "crypto";
-import { Prisma } from "@prisma/client";
 import type { IOrderRepository } from "../../../domain/repositories/order.repository.interface";
 import { ORDER_REPOSITORY } from "../../../domain/repositories/order.repository.interface";
 import type { IProductRepository } from "../../../domain/repositories/product.repository.interface";
@@ -20,8 +18,6 @@ import type { IComboRepository } from "../../../domain/repositories/combo.reposi
 import { COMBO_REPOSITORY } from "../../../domain/repositories/combo.repository.interface";
 import type { ICouponRepository } from "../../../domain/repositories/coupon.repository.interface";
 import { COUPON_REPOSITORY } from "../../../domain/repositories/coupon.repository.interface";
-import type { IStandProductRepository } from "../../../domain/repositories/stand-product.repository.interface";
-import { STAND_PRODUCT_REPOSITORY } from "../../../domain/repositories/stand-product.repository.interface";
 import { CreateOrderDto } from "../../dto/orders/create-order.dto";
 import {
   OrderEntity,
@@ -29,15 +25,6 @@ import {
   CreateOrderItemModifierParams,
 } from "../../../domain/entities/order.entity";
 import { CouponEntity } from "../../../domain/entities/coupon.entity";
-
-function generateShortCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(randomInt(chars.length));
-  }
-  return code;
-}
 
 @Injectable()
 export class CreateOrderUseCase {
@@ -56,20 +43,9 @@ export class CreateOrderUseCase {
     private readonly comboRepository: IComboRepository,
     @Inject(COUPON_REPOSITORY)
     private readonly couponRepository: ICouponRepository,
-    @Inject(STAND_PRODUCT_REPOSITORY)
-    private readonly standProductRepository: IStandProductRepository,
   ) {}
 
-  async execute(
-    userId: string | null,
-    dto: CreateOrderDto,
-  ): Promise<OrderEntity> {
-    if (!userId && !dto.guestEmail) {
-      throw new BadRequestException(
-        "guestEmail is required for guest checkout",
-      );
-    }
-
+  async execute(userId: string, dto: CreateOrderDto): Promise<OrderEntity> {
     const items: CreateOrderItemParams[] = [];
 
     for (const itemDto of dto.items) {
@@ -113,7 +89,6 @@ export class CreateOrderUseCase {
       let modifierTotal = 0;
 
       if (itemDto.modifiers && itemDto.modifiers.length > 0) {
-        // Batch-load size-specific prices to avoid N+1 queries
         const modifierIds = itemDto.modifiers.map((m) => m.modifierId);
         const sizePricesMap = itemDto.productSizeId
           ? await this.productModifierRepository.findSizePricesBatch(
@@ -139,7 +114,6 @@ export class CreateOrderUseCase {
               `ProductModifier ${modDto.modifierId} does not belong to product ${itemDto.productId}`,
             );
           }
-          // Validate size restriction
           if (modifier.sizeRestricted && itemDto.productSizeId) {
             if (!sizePricesMap.has(modDto.modifierId)) {
               throw new BadRequestException(
@@ -147,7 +121,6 @@ export class CreateOrderUseCase {
               );
             }
           }
-          // Resolve price: size-specific override or default
           const adj =
             sizePricesMap.get(modDto.modifierId) ?? modifier.priceAdjustment;
           modifierTotal += adj;
@@ -161,19 +134,10 @@ export class CreateOrderUseCase {
       const subtotal =
         Math.round((unitPrice + modifierTotal) * itemDto.quantity * 100) / 100;
 
-      // Resolve standId for the item
-      const resolvedStandId = await this.resolveItemStandId(
-        itemDto.standId,
-        itemDto.productId,
-        itemDto.comboId,
-        dto.standId,
-      );
-
       items.push({
         productId: itemDto.productId,
         productSizeId: itemDto.productSizeId,
         comboId: itemDto.comboId,
-        standId: resolvedStandId,
         quantity: itemDto.quantity,
         unitPrice,
         subtotal,
@@ -189,11 +153,6 @@ export class CreateOrderUseCase {
     let discount = 0;
 
     if (dto.couponCode) {
-      if (!userId) {
-        throw new BadRequestException(
-          "Coupons require an authenticated user",
-        );
-      }
       coupon = await this.couponRepository.findByName(
         dto.couponCode.toUpperCase(),
       );
@@ -213,98 +172,29 @@ export class CreateOrderUseCase {
 
     const total = Math.round((subtotal - discount) * 100) / 100;
 
-    const qrCode = randomUUID();
-    const maxRetries = 3;
+    const entity = OrderEntity.fromCreateDto({
+      userId,
+      couponId: coupon?.id,
+      deliveryAddressId: dto.deliveryAddressId,
+      deliveryDate: dto.deliveryDate ? new Date(dto.deliveryDate) : undefined,
+      deliveryTime: dto.deliveryTime,
+      notes: dto.notes,
+      priority: dto.priority,
+      subtotal,
+      discount,
+      total,
+      items,
+    });
+    const createdOrder = await this.orderRepository.create(entity);
 
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        const shortCode = generateShortCode();
-        const entity = OrderEntity.fromCreateDto({
-          userId,
-          standId: dto.standId,
-          couponId: coupon?.id,
-          guestEmail: userId ? null : dto.guestEmail ?? null,
-          guestName: userId ? null : dto.guestName ?? null,
-          guestPhone: userId ? null : dto.guestPhone ?? null,
-          qrCode,
-          shortCode,
-          subtotal,
-          discount,
-          total,
-          items,
-        });
-        const createdOrder = await this.orderRepository.create(entity);
-
-        if (coupon && coupon.id && createdOrder.id && userId) {
-          await this.couponRepository.consumeCoupon(
-            coupon.id,
-            userId,
-            createdOrder.id,
-          );
-        }
-
-        return createdOrder;
-      } catch (error: unknown) {
-        const isUniqueViolation =
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === "P2002";
-        if (!isUniqueViolation) {
-          throw error;
-        }
-      }
-    }
-
-    throw new BadRequestException(
-      "Failed to generate unique shortCode after multiple attempts",
-    );
-  }
-
-  private async resolveItemStandId(
-    explicitStandId: string | undefined,
-    productId: string,
-    comboId: string | undefined,
-    orderStandId: string | undefined,
-  ): Promise<string | undefined> {
-    // Combos are delivered from the order-level stand
-    if (comboId) {
-      if (!orderStandId) {
-        throw new BadRequestException(
-          "A standId is required on the order when ordering combo items",
-        );
-      }
-      return orderStandId;
-    }
-
-    // Explicit stand: validate it's an active association in the product's catalog
-    if (explicitStandId) {
-      const isActive = await this.standProductRepository.existsActive(
-        explicitStandId,
-        productId,
+    if (coupon && coupon.id && createdOrder.id) {
+      await this.couponRepository.consumeCoupon(
+        coupon.id,
+        userId,
+        createdOrder.id,
       );
-      if (!isActive) {
-        throw new BadRequestException(
-          `Stand ${explicitStandId} does not have product ${productId} active in its catalog`,
-        );
-      }
-      return explicitStandId;
     }
 
-    // Auto-resolve: check how many stands serve this product
-    const standIds =
-      await this.standProductRepository.findStandIdsForProduct(productId);
-
-    if (standIds.length === 0) {
-      // Global product, no stand assigned
-      return undefined;
-    }
-    if (standIds.length === 1) {
-      // Auto-assign the only stand
-      return standIds[0];
-    }
-
-    // Multiple stands: require explicit selection
-    throw new BadRequestException(
-      `Product ${productId} is available at multiple stands. Please specify a standId for this item.`,
-    );
+    return createdOrder;
   }
 }

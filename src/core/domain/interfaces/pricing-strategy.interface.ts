@@ -2,7 +2,6 @@ import { Money } from "../value-objects/money.vo";
 
 export interface PricingContext {
   userId?: string;
-  standId?: string;
   sizeId?: string;
   modifierIds?: string[];
 }

@@ -19,75 +19,23 @@ model User {
   name      String
   phone     String?
   birthDate DateTime? @map("birth_date") @db.Date
-  role      Role     @default(USER)
+  role      Role     @default(CLIENT)
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  stands       StandOperator[]
   orders       Order[]
-  deliveries   OrderItemDelivery[] @relation("deliveries")
   couponUsages CouponUsage[]
 
   @@map("users")
 }
 
 enum Role {
-  USER
-  ADMIN
-  STAND_OPERATOR
-  CATALOG_MANAGER
-}
-
-// ============================================
-// STANDS
-// ============================================
-
-model Stand {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  image       String?
-  location    String?
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  operators   StandOperator[]
-  catalog     StandProduct[]
-  orders      Order[]
-  orderItems  OrderItem[]
-  deliveries  OrderItemDelivery[]
-
-  @@map("stands")
-}
-
-model StandOperator {
-  standId   String   @map("stand_id")
-  userId    String   @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  stand Stand @relation(fields: [standId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
-
-  @@id([standId, userId])
-  @@map("stand_operators")
-}
-
-model StandProduct {
-  standId   String   @map("stand_id")
-  productId String   @map("product_id")
-  isActive  Boolean  @default(true) @map("is_active")
-  sortOrder Int      @default(0) @map("sort_order")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  stand   Stand   @relation(fields: [standId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@id([standId, productId])
-  @@index([productId])
-  @@index([standId])
-  @@map("stand_products")
+  SUPER_ADMIN
+  OPS_ADMIN
+  FINANCE_ADMIN
+  KAM
+  CLIENT
 }
 
 // ============================================
@@ -107,7 +55,6 @@ model Product {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  standCatalog   StandProduct[]
   sizes          ProductSize[]
   modifierGroups ProductModifierGroup[]
   comboItems     ComboItem[]
@@ -275,37 +222,52 @@ model CouponUsage {
 // ============================================
 
 enum OrderStatus {
-  PENDING
-  PAID
-  PARTIAL
-  COMPLETED
+  CREATED
+  PENDING_APPROVAL
+  PENDING_CONFIRMATION
+  CONFIRMED
+  REJECTED
+  IN_ADJUSTMENT
+  IN_PREPARATION
+  IN_TRANSIT
+  DELIVERED
   CANCELLED
 }
 
+enum OrderPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model Order {
-  id         String      @id @default(uuid())
-  userId     String?     @map("user_id")
-  standId    String?     @map("stand_id")
-  couponId   String?     @map("coupon_id")
-  guestEmail String?     @map("guest_email")
-  guestName  String?     @map("guest_name")
-  guestPhone String?     @map("guest_phone")
-  status     OrderStatus @default(PENDING)
-  qrCode     String      @unique @map("qr_code")
-  shortCode  String      @unique @map("short_code") @db.VarChar(6)
-  subtotal   Decimal     @default(0) @db.Decimal(10, 2)
-  discount   Decimal     @default(0) @db.Decimal(10, 2)
-  total      Decimal     @default(0) @db.Decimal(10, 2)
-  createdAt  DateTime    @default(now()) @map("created_at")
-  updatedAt  DateTime    @updatedAt @map("updated_at")
+  id                String        @id @default(uuid())
+  userId            String?       @map("user_id")
+  couponId          String?       @map("coupon_id")
+  companyId         String?       @map("company_id")
+  branchId          String?       @map("branch_id")
+  departmentId      String?       @map("department_id")
+  createdById       String?       @map("created_by_id")
+  deliveryAddressId String?       @map("delivery_address_id")
+  deliveryDate      DateTime?     @map("delivery_date") @db.Date
+  deliveryTime      String?       @map("delivery_time")
+  notes             String?
+  priority          OrderPriority @default(MEDIUM)
+  status            OrderStatus   @default(CREATED)
+  subtotal          Decimal       @default(0) @db.Decimal(10, 2)
+  discount          Decimal       @default(0) @db.Decimal(10, 2)
+  total             Decimal       @default(0) @db.Decimal(10, 2)
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
 
   user        User?         @relation(fields: [userId], references: [id])
-  stand       Stand?        @relation(fields: [standId], references: [id])
   coupon      Coupon?       @relation(fields: [couponId], references: [id])
   items       OrderItem[]
   couponUsage CouponUsage?
 
   @@index([userId])
+  @@index([companyId])
+  @@index([createdById])
   @@map("orders")
 }
 
@@ -315,7 +277,6 @@ model OrderItem {
   productId     String  @map("product_id")
   productSizeId String? @map("product_size_id")
   comboId       String? @map("combo_id")
-  standId       String? @map("stand_id")
   quantity      Int     @default(1)
   unitPrice     Decimal @map("unit_price") @db.Decimal(10, 2)
   subtotal      Decimal @db.Decimal(10, 2)
@@ -324,12 +285,9 @@ model OrderItem {
   product     Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
   productSize ProductSize? @relation(fields: [productSizeId], references: [id], onDelete: Restrict)
   combo       Combo?       @relation(fields: [comboId], references: [id], onDelete: Restrict)
-  stand       Stand?       @relation(fields: [standId], references: [id], onDelete: Restrict)
   modifiers   OrderItemModifier[]
-  deliveries  OrderItemDelivery[]
 
   @@index([orderId])
-  @@index([standId])
   @@map("order_items")
 }
 
@@ -343,20 +301,6 @@ model OrderItemModifier {
   modifier  ProductModifier @relation(fields: [modifierId], references: [id], onDelete: Restrict)
 
   @@map("order_item_modifiers")
-}
-
-model OrderItemDelivery {
-  id                String   @id @default(uuid())
-  orderItemId       String   @map("order_item_id")
-  standId           String   @map("stand_id")
-  deliveredByUserId String   @map("delivered_by_user_id")
-  deliveredAt       DateTime @default(now()) @map("delivered_at")
-
-  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  stand       Stand     @relation(fields: [standId], references: [id], onDelete: Restrict)
-  deliveredBy User      @relation("deliveries", fields: [deliveredByUserId], references: [id], onDelete: Restrict)
-
-  @@map("order_item_deliveries")
 }
 
 // ============================================

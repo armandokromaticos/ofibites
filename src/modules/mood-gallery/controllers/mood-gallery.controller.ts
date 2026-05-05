@@ -64,7 +64,7 @@ export class MoodGalleryController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.CATALOG_MANAGER)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Crear entrada de mood gallery" })
   async create(
     @Body() dto: CreateMoodGalleryDto,
@@ -92,7 +92,7 @@ export class MoodGalleryController {
   @Get(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.CATALOG_MANAGER)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Obtener mood gallery por ID" })
   async findOne(
     @Param("id", ParseUUIDPipe) id: string,
@@ -104,7 +104,7 @@ export class MoodGalleryController {
   @Patch(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.CATALOG_MANAGER)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Actualizar mood gallery" })
   async update(
     @Param("id", ParseUUIDPipe) id: string,
@@ -117,7 +117,7 @@ export class MoodGalleryController {
   @Delete(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.CATALOG_MANAGER)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Eliminar mood gallery" })
   async remove(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
@@ -129,7 +129,7 @@ export class MoodGalleryController {
   @Post(":id/image")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.CATALOG_MANAGER)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Subir imagen desktop de mood gallery" })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
@@ -172,7 +172,7 @@ export class MoodGalleryController {
   @Post(":id/image-mobile")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.CATALOG_MANAGER)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Subir imagen mobile de mood gallery" })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
@@ -215,7 +215,7 @@ export class MoodGalleryController {
   @Delete(":id/image")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.CATALOG_MANAGER)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Eliminar imagen desktop de mood gallery" })
   async deleteImage(
@@ -231,7 +231,7 @@ export class MoodGalleryController {
   @Delete(":id/image-mobile")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.CATALOG_MANAGER)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Eliminar imagen mobile de mood gallery" })
   async deleteMobileImage(

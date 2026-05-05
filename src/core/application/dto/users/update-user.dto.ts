@@ -25,7 +25,7 @@ export class UpdateUserDto {
   @IsString()
   phone?: string;
 
-  @ApiPropertyOptional({ enum: Role, example: Role.STAND_OPERATOR })
+  @ApiPropertyOptional({ enum: Role, example: Role.SUPER_ADMIN })
   @IsOptional()
   @IsEnum(Role)
   role?: Role;

@@ -61,7 +61,7 @@ export class BannersController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Crear banner" })
   async createBanner(@Body() dto: CreateBannerDto): Promise<BannerResponseDto> {
     const entity = await this.createBannerUseCase.execute(dto);
@@ -84,7 +84,7 @@ export class BannersController {
   @Get(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Obtener banner por ID" })
   async findOneBanner(
     @Param("id", ParseUUIDPipe) id: string,
@@ -96,7 +96,7 @@ export class BannersController {
   @Patch(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Actualizar banner" })
   async updateBanner(
     @Param("id", ParseUUIDPipe) id: string,
@@ -109,7 +109,7 @@ export class BannersController {
   @Delete(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Eliminar banner" })
   async deleteBanner(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
@@ -121,7 +121,7 @@ export class BannersController {
   @Post(":id/image")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Subir imagen desktop del banner" })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
@@ -164,7 +164,7 @@ export class BannersController {
   @Post(":id/image-mobile")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Subir imagen mobile del banner" })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
@@ -207,7 +207,7 @@ export class BannersController {
   @Delete(":id/image")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Eliminar imagen desktop del banner" })
   async deleteImage(
@@ -220,7 +220,7 @@ export class BannersController {
   @Delete(":id/image-mobile")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Eliminar imagen mobile del banner" })
   async deleteMobileImage(

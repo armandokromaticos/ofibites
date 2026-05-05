@@ -7,7 +7,6 @@ import { SupabaseModule } from "./core/infrastructure/supabase/supabase.module";
 import { UsersModule } from "./modules/users/users.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { ProductsModule } from "./modules/products/products.module";
-import { StandsModule } from "./modules/stands/stands.module";
 import { CombosModule } from "./modules/combos/combos.module";
 import { OrdersModule } from "./modules/orders/orders.module";
 import { CouponsModule } from "./modules/coupons/coupons.module";
@@ -24,7 +23,6 @@ import { AgencyCardsModule } from "./modules/agency-cards/agency-cards.module";
     UsersModule,
     AuthModule,
     ProductsModule,
-    StandsModule,
     CombosModule,
     OrdersModule,
     CouponsModule,

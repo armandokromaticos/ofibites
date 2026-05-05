@@ -6,7 +6,7 @@ import { RolesGuard } from "../guards/roles.guard";
 import { Roles } from "./roles.decorator";
 
 export function AdminOnly(...roles: Role[]): MethodDecorator & ClassDecorator {
-  const allowed = roles.length > 0 ? roles : [Role.ADMIN];
+  const allowed = roles.length > 0 ? roles : [Role.SUPER_ADMIN];
   return applyDecorators(
     ApiBearerAuth(),
     UseGuards(JwtAuthGuard, RolesGuard),

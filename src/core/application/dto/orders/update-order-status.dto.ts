@@ -3,7 +3,7 @@ import { IsEnum } from "class-validator";
 import { OrderStatus } from "../../../domain/enums/order-status.enum";
 
 export class UpdateOrderStatusDto {
-  @ApiProperty({ enum: OrderStatus, example: OrderStatus.PAID })
+  @ApiProperty({ enum: OrderStatus, example: OrderStatus.CONFIRMED })
   @IsEnum(OrderStatus)
   status: OrderStatus;
 }

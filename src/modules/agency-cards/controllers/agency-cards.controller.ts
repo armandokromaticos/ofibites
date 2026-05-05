@@ -61,7 +61,7 @@ export class AgencyCardsController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Crear agency card" })
   async create(
     @Body() dto: CreateAgencyCardDto,
@@ -85,7 +85,7 @@ export class AgencyCardsController {
   @Get(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Obtener agency card por ID" })
   async findOne(
     @Param("id", ParseUUIDPipe) id: string,
@@ -97,7 +97,7 @@ export class AgencyCardsController {
   @Patch(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Actualizar agency card" })
   async update(
     @Param("id", ParseUUIDPipe) id: string,
@@ -110,7 +110,7 @@ export class AgencyCardsController {
   @Delete(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Eliminar agency card" })
   async delete(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
@@ -122,7 +122,7 @@ export class AgencyCardsController {
   @Post(":id/image")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Subir imagen de la agency card" })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
@@ -164,7 +164,7 @@ export class AgencyCardsController {
   @Delete(":id/image")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Eliminar imagen de la agency card" })
   async deleteImage(

@@ -26,7 +26,7 @@ export class GetOrderUseCase {
       throw new NotFoundException(`Order with id ${orderId} not found`);
     }
 
-    if (userRole !== Role.ADMIN && order.userId !== userId) {
+    if (userRole !== Role.SUPER_ADMIN && order.userId !== userId) {
       throw new ForbiddenException("You can only view your own orders");
     }
 

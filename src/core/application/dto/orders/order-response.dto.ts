@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { OrderPriority } from "../../../domain/enums/order-priority.enum";
 
 export class OrderItemModifierResponseDto {
   @ApiProperty()
@@ -9,20 +10,6 @@ export class OrderItemModifierResponseDto {
 
   @ApiProperty()
   priceAdjustment: number;
-}
-
-export class OrderItemDeliveryResponseDto {
-  @ApiProperty()
-  id: string;
-
-  @ApiProperty()
-  standId: string;
-
-  @ApiProperty()
-  deliveredByUserId: string;
-
-  @ApiProperty()
-  deliveredAt: Date;
 }
 
 export class OrderItemResponseDto {
@@ -38,9 +25,6 @@ export class OrderItemResponseDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   comboId: string | null;
 
-  @ApiPropertyOptional({ nullable: true, type: String })
-  standId: string | null;
-
   @ApiProperty()
   quantity: number;
 
@@ -52,9 +36,6 @@ export class OrderItemResponseDto {
 
   @ApiPropertyOptional({ type: () => [OrderItemModifierResponseDto] })
   modifiers?: OrderItemModifierResponseDto[];
-
-  @ApiPropertyOptional({ type: () => [OrderItemDeliveryResponseDto] })
-  deliveries?: OrderItemDeliveryResponseDto[];
 }
 
 export class OrderResponseDto {
@@ -65,28 +46,37 @@ export class OrderResponseDto {
   userId: string | null;
 
   @ApiPropertyOptional({ nullable: true, type: String })
-  guestEmail: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  guestName: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  guestPhone: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  standId: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
   couponId: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  companyId: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  branchId: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  departmentId: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  createdById: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  deliveryAddressId: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Date })
+  deliveryDate: Date | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  deliveryTime: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  notes: string | null;
+
+  @ApiProperty({ enum: OrderPriority })
+  priority: OrderPriority;
 
   @ApiProperty()
   status: string;
-
-  @ApiProperty()
-  qrCode: string;
-
-  @ApiProperty()
-  shortCode: string;
 
   @ApiProperty()
   subtotal: number;

@@ -42,14 +42,6 @@ export class CreateOrderItemDto {
   @Validate(MutuallyExclusiveIdsConstraint)
   comboId?: string;
 
-  @ApiPropertyOptional({
-    example: "uuid-of-stand",
-    description: "Stand que preparará este ítem",
-  })
-  @IsOptional()
-  @IsUUID()
-  standId?: string;
-
   @ApiProperty({ example: 2 })
   @IsInt()
   @Min(1)

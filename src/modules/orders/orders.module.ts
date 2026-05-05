@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
 import { CouponsModule } from "../coupons/coupons.module";
-import { StandsModule } from "../stands/stands.module";
 import { OrdersController } from "./controllers/orders.controller";
 import { ORDER_REPOSITORY } from "../../core/domain/repositories/order.repository.interface";
 import { OrderRepository } from "../../core/infrastructure/repositories/order.repository";
@@ -19,13 +18,10 @@ import { CreateOrderUseCase } from "../../core/application/use-cases/orders/crea
 import { GetOrderUseCase } from "../../core/application/use-cases/orders/get-order.use-case";
 import { GetOrdersUseCase } from "../../core/application/use-cases/orders/get-orders.use-case";
 import { CancelOrderUseCase } from "../../core/application/use-cases/orders/cancel-order.use-case";
-import { GetOrderByQrUseCase } from "../../core/application/use-cases/orders/get-order-by-qr.use-case";
-import { GetOrderByCodeUseCase } from "../../core/application/use-cases/orders/get-order-by-code.use-case";
 import { UpdateOrderStatusUseCase } from "../../core/application/use-cases/orders/update-order-status.use-case";
-import { DeliverOrderItemUseCase } from "../../core/application/use-cases/orders/deliver-order-item.use-case";
 
 @Module({
-  imports: [AuthModule, CouponsModule, StandsModule],
+  imports: [AuthModule, CouponsModule],
   controllers: [OrdersController],
   providers: [
     { provide: ORDER_REPOSITORY, useClass: OrderRepository },
@@ -44,10 +40,7 @@ import { DeliverOrderItemUseCase } from "../../core/application/use-cases/orders
     GetOrderUseCase,
     GetOrdersUseCase,
     CancelOrderUseCase,
-    GetOrderByQrUseCase,
-    GetOrderByCodeUseCase,
     UpdateOrderStatusUseCase,
-    DeliverOrderItemUseCase,
   ],
 })
 export class OrdersModule {}

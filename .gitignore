@@ -64,6 +64,9 @@ producto.md
 Pasarela.md
 # Claude Code
 .claude/
+CLAUDE.md
+.agents/
+skills-lock.json
 
 # Docs
 /docs

@@ -48,7 +48,7 @@ import {
 @ApiTags("Combos")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.SUPER_ADMIN)
 @Controller("combos")
 export class CombosController {
   constructor(

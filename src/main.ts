@@ -17,15 +17,14 @@ async function bootstrap() {
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle("Cantaritos El Güero API")
-    .setDescription("API para sistema de ventas con códigos QR")
+    .setTitle("Ofibites API")
+    .setDescription("API B2B de aprovisionamiento corporativo")
     .setVersion("1.0")
     .addTag("Auth", "Autenticación")
     .addTag("Users", "Gestión de usuarios")
-    .addTag("Stands", "Gestión de puestos")
     .addTag("Products", "Gestión de productos, tamaños y modificadores")
     .addTag("Combos", "Gestión de combos")
-    .addTag("Orders", "Gestión de órdenes y entregas")
+    .addTag("Orders", "Gestión de órdenes")
     .addTag("Banners", "Gestión de banners para carrusel")
     .addBearerAuth()
     .build();

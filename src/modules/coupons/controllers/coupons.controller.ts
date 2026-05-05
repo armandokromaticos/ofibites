@@ -46,7 +46,7 @@ export class CouponsController {
   ) {}
 
   @Post()
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Crear cupon (GLOBAL o UNIQUE)" })
   @ApiQuery({ name: "lang", required: false, enum: Lang })
   async createCoupon(
@@ -59,7 +59,7 @@ export class CouponsController {
   }
 
   @Get()
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Listar cupones (filtrable por tipo)" })
   @ApiQuery({ name: "type", required: false, enum: CouponType })
   @ApiQuery({ name: "lang", required: false, enum: Lang })
@@ -73,7 +73,7 @@ export class CouponsController {
   }
 
   @Get(":id")
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Obtener cupon por ID" })
   @ApiQuery({ name: "lang", required: false, enum: Lang })
   async findOneCoupon(
@@ -86,7 +86,7 @@ export class CouponsController {
   }
 
   @Patch(":id")
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Actualizar cupon" })
   @ApiQuery({ name: "lang", required: false, enum: Lang })
   async updateCoupon(
@@ -100,7 +100,7 @@ export class CouponsController {
   }
 
   @Patch(":id/toggle")
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Activar/desactivar cupon" })
   @ApiQuery({ name: "lang", required: false, enum: Lang })
   async toggleCoupon(

@@ -28,12 +28,14 @@ export class CancelOrderUseCase {
       throw new NotFoundException(`Order with id ${orderId} not found`);
     }
 
-    if (userRole !== Role.ADMIN && order.userId !== userId) {
+    if (userRole !== Role.SUPER_ADMIN && order.userId !== userId) {
       throw new ForbiddenException("You can only cancel your own orders");
     }
 
     if (!order.canTransitionTo(OrderStatus.CANCELLED)) {
-      throw new BadRequestException("Only PENDING orders can be cancelled");
+      throw new BadRequestException(
+        `Order in status ${order.status} cannot be cancelled`,
+      );
     }
 
     return this.orderRepository.updateStatus(orderId, OrderStatus.CANCELLED);

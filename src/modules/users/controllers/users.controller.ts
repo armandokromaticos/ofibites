@@ -44,7 +44,7 @@ export class UsersController {
   @Get()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Listar usuarios" })
   async findAll(): Promise<UserResponseDto[]> {
     const users = await this.getUsersUseCase.execute();
@@ -54,7 +54,7 @@ export class UsersController {
   @Get(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Obtener usuario por ID" })
   async findOne(@Param("id") id: string): Promise<UserResponseDto> {
     const user = await this.getUserUseCase.execute(id);
@@ -64,7 +64,7 @@ export class UsersController {
   @Patch(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Actualizar usuario" })
   async update(
     @Param("id") id: string,
@@ -78,7 +78,7 @@ export class UsersController {
   @HttpCode(204)
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Eliminar usuario" })
   async remove(@Param("id") id: string): Promise<void> {
     await this.deleteUserUseCase.execute(id);

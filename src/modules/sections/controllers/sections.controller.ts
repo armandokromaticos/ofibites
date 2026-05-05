@@ -70,7 +70,7 @@ export class SectionsController {
   @Get("id/:id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({
     summary: "Obtener sección por id con traducciones (admin)",
   })
@@ -101,7 +101,7 @@ export class SectionsController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Crear sección" })
   @ApiQuery({ name: "lang", required: false, enum: Lang })
   async createSection(
@@ -116,7 +116,7 @@ export class SectionsController {
   @Patch(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Actualizar sección" })
   @ApiQuery({ name: "lang", required: false, enum: Lang })
   async updateSection(
@@ -132,7 +132,7 @@ export class SectionsController {
   @Delete(":id")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(204)
   @ApiOperation({ summary: "Eliminar sección" })
   async deleteSection(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
@@ -144,7 +144,7 @@ export class SectionsController {
   @Post(":id/items")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Agregar item a sección" })
   @ApiQuery({ name: "lang", required: false, enum: Lang })
   async addItem(
@@ -160,7 +160,7 @@ export class SectionsController {
   @Delete(":id/items/:itemId")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @HttpCode(204)
   @ApiOperation({ summary: "Quitar item de sección" })
   async removeItem(
@@ -173,7 +173,7 @@ export class SectionsController {
   @Patch(":id/items/reorder")
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @ApiOperation({ summary: "Reordenar items de sección" })
   @ApiQuery({ name: "lang", required: false, enum: Lang })
   async reorderItems(

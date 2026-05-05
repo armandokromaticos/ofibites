@@ -2,29 +2,24 @@ import {
   Order as PrismaOrder,
   OrderItem as PrismaOrderItem,
   OrderItemModifier as PrismaOrderItemModifier,
-  OrderItemDelivery as PrismaOrderItemDelivery,
 } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { OrderStatus } from "../enums/order-status.enum";
+import { OrderPriority } from "../enums/order-priority.enum";
 import {
   OrderResponseDto,
   OrderItemResponseDto,
   OrderItemModifierResponseDto,
-  OrderItemDeliveryResponseDto,
 } from "../../application/dto/orders/order-response.dto";
 import { OrderStateMachine } from "../services/order-state-machine";
 import { Money } from "../value-objects/money.vo";
 
 type PrismaOrderWithRelations = PrismaOrder & {
   couponId?: string | null;
-  guestEmail?: string | null;
-  guestName?: string | null;
-  guestPhone?: string | null;
   subtotal?: Decimal;
   discount?: Decimal;
   items?: (PrismaOrderItem & {
     modifiers?: PrismaOrderItemModifier[];
-    deliveries?: PrismaOrderItemDelivery[];
   })[];
 };
 
@@ -34,37 +29,31 @@ interface OrderItemModifierInfo {
   priceAdjustment: number;
 }
 
-interface OrderItemDeliveryInfo {
-  id: string;
-  standId: string;
-  deliveredByUserId: string;
-  deliveredAt: Date;
-}
-
 interface OrderItemInfo {
   id: string | undefined;
   productId: string;
   productSizeId: string | null;
   comboId: string | null;
-  standId: string | null;
   quantity: number;
   unitPrice: number;
   subtotal: number;
   modifiers: OrderItemModifierInfo[];
-  deliveries: OrderItemDeliveryInfo[];
 }
 
 interface OrderProps {
   id: string | undefined;
   userId: string | null;
-  standId: string | null;
   couponId: string | null;
-  guestEmail: string | null;
-  guestName: string | null;
-  guestPhone: string | null;
+  companyId: string | null;
+  branchId: string | null;
+  departmentId: string | null;
+  createdById: string | null;
+  deliveryAddressId: string | null;
+  deliveryDate: Date | null;
+  deliveryTime: string | null;
+  notes: string | null;
+  priority: OrderPriority;
   status: OrderStatus;
-  qrCode: string;
-  shortCode: string;
   subtotal: number;
   discount: number;
   total: number;
@@ -82,7 +71,6 @@ export interface CreateOrderItemParams {
   productId: string;
   productSizeId?: string;
   comboId?: string;
-  standId?: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
@@ -90,14 +78,17 @@ export interface CreateOrderItemParams {
 }
 
 export interface CreateOrderParams {
-  userId: string | null;
-  standId?: string;
+  userId: string;
   couponId?: string;
-  guestEmail?: string | null;
-  guestName?: string | null;
-  guestPhone?: string | null;
-  qrCode: string;
-  shortCode: string;
+  companyId?: string;
+  branchId?: string;
+  departmentId?: string;
+  createdById?: string;
+  deliveryAddressId?: string;
+  deliveryDate?: Date;
+  deliveryTime?: string;
+  notes?: string;
+  priority?: OrderPriority;
   subtotal: number;
   discount: number;
   total: number;
@@ -118,29 +109,38 @@ export class OrderEntity {
   get userId(): string | null {
     return this.props.userId;
   }
-  get guestEmail(): string | null {
-    return this.props.guestEmail;
-  }
-  get guestName(): string | null {
-    return this.props.guestName;
-  }
-  get guestPhone(): string | null {
-    return this.props.guestPhone;
-  }
-  get standId(): string | null {
-    return this.props.standId;
-  }
   get couponId(): string | null {
     return this.props.couponId;
   }
+  get companyId(): string | null {
+    return this.props.companyId;
+  }
+  get branchId(): string | null {
+    return this.props.branchId;
+  }
+  get departmentId(): string | null {
+    return this.props.departmentId;
+  }
+  get createdById(): string | null {
+    return this.props.createdById;
+  }
+  get deliveryAddressId(): string | null {
+    return this.props.deliveryAddressId;
+  }
+  get deliveryDate(): Date | null {
+    return this.props.deliveryDate;
+  }
+  get deliveryTime(): string | null {
+    return this.props.deliveryTime;
+  }
+  get notes(): string | null {
+    return this.props.notes;
+  }
+  get priority(): OrderPriority {
+    return this.props.priority;
+  }
   get status(): OrderStatus {
     return this.props.status;
-  }
-  get qrCode(): string {
-    return this.props.qrCode;
-  }
-  get shortCode(): string {
-    return this.props.shortCode;
   }
   get subtotal(): number {
     return this.props.subtotal;
@@ -163,17 +163,6 @@ export class OrderEntity {
 
   canTransitionTo(status: OrderStatus): boolean {
     return OrderEntity.stateMachine.canTransition(this.props.status, status);
-  }
-
-  isItemDelivered(itemId: string): boolean {
-    const item = this.props.items?.find((orderItem) => orderItem.id === itemId);
-    if (!item) return false;
-    return item.deliveries.length > 0;
-  }
-
-  areAllItemsDelivered(): boolean {
-    if (!this.props.items || this.props.items.length === 0) return false;
-    return this.props.items.every((item) => item.deliveries.length > 0);
   }
 
   calculateTotal(): Money {
@@ -203,14 +192,17 @@ export class OrderEntity {
     return new OrderEntity({
       id: undefined,
       userId: params.userId,
-      standId: params.standId ?? null,
       couponId: params.couponId ?? null,
-      guestEmail: params.guestEmail ?? null,
-      guestName: params.guestName ?? null,
-      guestPhone: params.guestPhone ?? null,
-      status: OrderStatus.PENDING,
-      qrCode: params.qrCode,
-      shortCode: params.shortCode,
+      companyId: params.companyId ?? null,
+      branchId: params.branchId ?? null,
+      departmentId: params.departmentId ?? null,
+      createdById: params.createdById ?? params.userId,
+      deliveryAddressId: params.deliveryAddressId ?? null,
+      deliveryDate: params.deliveryDate ?? null,
+      deliveryTime: params.deliveryTime ?? null,
+      notes: params.notes ?? null,
+      priority: params.priority ?? OrderPriority.MEDIUM,
+      status: OrderStatus.CREATED,
       subtotal: params.subtotal,
       discount: params.discount,
       total: params.total,
@@ -221,7 +213,6 @@ export class OrderEntity {
         productId: item.productId,
         productSizeId: item.productSizeId ?? null,
         comboId: item.comboId ?? null,
-        standId: item.standId ?? null,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         subtotal: item.subtotal,
@@ -230,7 +221,6 @@ export class OrderEntity {
           modifierId: modifier.modifierId,
           priceAdjustment: modifier.priceAdjustment,
         })),
-        deliveries: [],
       })),
     });
   }
@@ -238,13 +228,16 @@ export class OrderEntity {
   toPrismaCreate(): Record<string, unknown> {
     return {
       userId: this.props.userId,
-      standId: this.props.standId,
       couponId: this.props.couponId,
-      guestEmail: this.props.guestEmail,
-      guestName: this.props.guestName,
-      guestPhone: this.props.guestPhone,
-      qrCode: this.props.qrCode,
-      shortCode: this.props.shortCode,
+      companyId: this.props.companyId,
+      branchId: this.props.branchId,
+      departmentId: this.props.departmentId,
+      createdById: this.props.createdById,
+      deliveryAddressId: this.props.deliveryAddressId,
+      deliveryDate: this.props.deliveryDate,
+      deliveryTime: this.props.deliveryTime,
+      notes: this.props.notes,
+      priority: this.props.priority,
       subtotal: this.props.subtotal,
       discount: this.props.discount,
       total: this.props.total,
@@ -253,7 +246,6 @@ export class OrderEntity {
           productId: item.productId,
           productSizeId: item.productSizeId,
           comboId: item.comboId,
-          standId: item.standId,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           subtotal: item.subtotal,
@@ -272,14 +264,17 @@ export class OrderEntity {
     const props: OrderProps = {
       id: prisma.id,
       userId: prisma.userId ?? null,
-      standId: prisma.standId,
       couponId: prisma.couponId ?? null,
-      guestEmail: prisma.guestEmail ?? null,
-      guestName: prisma.guestName ?? null,
-      guestPhone: prisma.guestPhone ?? null,
+      companyId: prisma.companyId ?? null,
+      branchId: prisma.branchId ?? null,
+      departmentId: prisma.departmentId ?? null,
+      createdById: prisma.createdById ?? null,
+      deliveryAddressId: prisma.deliveryAddressId ?? null,
+      deliveryDate: prisma.deliveryDate ?? null,
+      deliveryTime: prisma.deliveryTime ?? null,
+      notes: prisma.notes ?? null,
+      priority: prisma.priority as OrderPriority,
       status: prisma.status as OrderStatus,
-      qrCode: prisma.qrCode,
-      shortCode: prisma.shortCode,
       subtotal: Number(prisma.subtotal ?? prisma.total),
       discount: Number(prisma.discount ?? 0),
       total: Number(prisma.total),
@@ -293,7 +288,6 @@ export class OrderEntity {
         productId: item.productId,
         productSizeId: item.productSizeId,
         comboId: item.comboId,
-        standId: item.standId ?? null,
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),
         subtotal: Number(item.subtotal),
@@ -301,12 +295,6 @@ export class OrderEntity {
           id: modifier.id,
           modifierId: modifier.modifierId,
           priceAdjustment: Number(modifier.priceAdjustment),
-        })),
-        deliveries: (item.deliveries ?? []).map((delivery) => ({
-          id: delivery.id,
-          standId: delivery.standId,
-          deliveredByUserId: delivery.deliveredByUserId,
-          deliveredAt: delivery.deliveredAt,
         })),
       }));
     }
@@ -321,14 +309,17 @@ export class OrderEntity {
     const dto = new OrderResponseDto();
     dto.id = this.props.id;
     dto.userId = this.props.userId;
-    dto.guestEmail = this.props.guestEmail;
-    dto.guestName = this.props.guestName;
-    dto.guestPhone = this.props.guestPhone;
-    dto.standId = this.props.standId;
     dto.couponId = this.props.couponId;
+    dto.companyId = this.props.companyId;
+    dto.branchId = this.props.branchId;
+    dto.departmentId = this.props.departmentId;
+    dto.createdById = this.props.createdById;
+    dto.deliveryAddressId = this.props.deliveryAddressId;
+    dto.deliveryDate = this.props.deliveryDate;
+    dto.deliveryTime = this.props.deliveryTime;
+    dto.notes = this.props.notes;
+    dto.priority = this.props.priority;
     dto.status = this.props.status;
-    dto.qrCode = this.props.qrCode;
-    dto.shortCode = this.props.shortCode;
     dto.subtotal = this.props.subtotal;
     dto.discount = this.props.discount;
     dto.total = this.props.total;
@@ -347,7 +338,6 @@ export class OrderEntity {
         itemDto.productId = item.productId;
         itemDto.productSizeId = item.productSizeId;
         itemDto.comboId = item.comboId;
-        itemDto.standId = item.standId;
         itemDto.quantity = item.quantity;
         itemDto.unitPrice = item.unitPrice;
         itemDto.subtotal = item.subtotal;
@@ -362,14 +352,6 @@ export class OrderEntity {
           modDto.modifierId = modifier.modifierId;
           modDto.priceAdjustment = modifier.priceAdjustment;
           return modDto;
-        });
-        itemDto.deliveries = item.deliveries.map((delivery) => {
-          const delDto = new OrderItemDeliveryResponseDto();
-          delDto.id = delivery.id;
-          delDto.standId = delivery.standId;
-          delDto.deliveredByUserId = delivery.deliveredByUserId;
-          delDto.deliveredAt = delivery.deliveredAt;
-          return delDto;
         });
         return itemDto;
       });

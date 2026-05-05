@@ -1,23 +1,21 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
-  IsUUID,
   IsOptional,
   IsString,
-  IsEmail,
   IsArray,
   ArrayMinSize,
-  MaxLength,
   ValidateNested,
+  IsUUID,
+  IsDateString,
+  IsEnum,
+  MaxLength,
+  Matches,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { CreateOrderItemDto } from "./create-order-item.dto";
+import { OrderPriority } from "../../../domain/enums/order-priority.enum";
 
 export class CreateOrderDto {
-  @ApiPropertyOptional({ example: "uuid-of-stand" })
-  @IsOptional()
-  @IsUUID()
-  standId?: string;
-
   @ApiPropertyOptional({
     example: "VERANO2026",
     description: "Codigo del cupon a aplicar",
@@ -27,24 +25,42 @@ export class CreateOrderDto {
   couponCode?: string;
 
   @ApiPropertyOptional({
-    example: "juan@example.com",
-    description: "Email del invitado (obligatorio para checkout sin sesión)",
+    example: "uuid-of-company-address",
+    description: "Direccion de entrega (sede de la empresa)",
   })
   @IsOptional()
-  @IsEmail()
-  guestEmail?: string;
+  @IsUUID()
+  deliveryAddressId?: string;
 
-  @ApiPropertyOptional({ example: "Juan Pérez" })
+  @ApiPropertyOptional({
+    example: "2026-05-12",
+    description: "Fecha de entrega (ISO date)",
+  })
+  @IsOptional()
+  @IsDateString()
+  deliveryDate?: string;
+
+  @ApiPropertyOptional({
+    example: "09:30",
+    description: "Hora de entrega (HH:mm)",
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(120)
-  guestName?: string;
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, {
+    message: "deliveryTime must be in HH:mm format",
+  })
+  deliveryTime?: string;
 
-  @ApiPropertyOptional({ example: "+525555555555" })
+  @ApiPropertyOptional({ example: "Entregar en recepción" })
   @IsOptional()
   @IsString()
-  @MaxLength(30)
-  guestPhone?: string;
+  @MaxLength(500)
+  notes?: string;
+
+  @ApiPropertyOptional({ enum: OrderPriority, example: OrderPriority.MEDIUM })
+  @IsOptional()
+  @IsEnum(OrderPriority)
+  priority?: OrderPriority;
 
   @ApiProperty({ type: () => [CreateOrderItemDto] })
   @IsArray()
