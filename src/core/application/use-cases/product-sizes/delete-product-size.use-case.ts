@@ -3,6 +3,7 @@ import type { IProductSizeRepository } from "../../../domain/repositories/produc
 import { PRODUCT_SIZE_REPOSITORY } from "../../../domain/repositories/product-size.repository.interface";
 import type { IProductRepository } from "../../../domain/repositories/product.repository.interface";
 import { PRODUCT_REPOSITORY } from "../../../domain/repositories/product.repository.interface";
+import { recalculateProductStock } from "./recalculate-product-stock";
 
 @Injectable()
 export class DeleteProductSizeUseCase {
@@ -14,28 +15,18 @@ export class DeleteProductSizeUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    const existing = await this.productSizeRepository.findById(id);
+    const existing = await this.productSizeRepository.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Product size with id "${id}" not found`);
     }
 
     await this.productSizeRepository.delete(id);
-    await this.recalculateProductStock(existing.productId);
-  }
-
-  private async recalculateProductStock(productId: string): Promise<void> {
-    const sizes = await this.productSizeRepository.findByProductId(productId);
-    const activeSizesWithStock = sizes.filter(
-      (size) => size.isActive && size.stock !== null,
+    await recalculateProductStock(
+      existing.productId,
+      this.productSizeRepository,
+      this.productRepository,
     );
-    if (activeSizesWithStock.length === 0) {
-      await this.productRepository.updateStock(productId, null);
-      return;
-    }
-    const totalStock = activeSizesWithStock.reduce(
-      (sum, size) => sum + size.stock!,
-      0,
-    );
-    await this.productRepository.updateStock(productId, totalStock);
   }
 }

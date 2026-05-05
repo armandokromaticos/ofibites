@@ -35,7 +35,9 @@ export class UploadMoodGalleryImageUseCase {
     field: "imageUrl" | "imageMobileUrl",
     file: UploadFileInput,
   ): Promise<MoodGalleryEntity> {
-    const existing = await this.moodGalleryRepository.findById(moodGalleryId);
+    const existing = await this.moodGalleryRepository.findUnique({
+      where: { id: moodGalleryId },
+    });
     if (!existing) {
       throw new NotFoundException(
         `MoodGallery with id ${moodGalleryId} not found`,
@@ -83,8 +85,9 @@ export class UploadMoodGalleryImageUseCase {
     }
 
     try {
-      const updated = await this.moodGalleryRepository.update(moodGalleryId, {
-        [field]: publicUrl,
+      const updated = await this.moodGalleryRepository.update({
+        where: { id: moodGalleryId },
+        data: { [field]: publicUrl },
       });
 
       // Best-effort cleanup of old file after successful update

@@ -4,8 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import type { ISectionRepository } from "../../../domain/repositories/section.repository.interface";
-import { SECTION_REPOSITORY } from "../../../domain/repositories/section.repository.interface";
+import {
+  SECTION_FULL_INCLUDE,
+  SECTION_REPOSITORY,
+} from "../../../domain/repositories/section.repository.interface";
 import { UpdateSectionDto } from "../../dto/sections/update-section.dto";
 import { SectionEntity } from "../../../domain/entities/section.entity";
 
@@ -21,22 +25,22 @@ export class UpdateSectionUseCase {
     if (!hasUpdates) {
       throw new BadRequestException("No fields provided for update");
     }
-    const existing = await this.sectionRepository.findById(id);
+    const existing = await this.sectionRepository.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Section with id ${id} not found`);
     }
-    const updates: {
-      nameEs?: string;
-      nameEn?: string;
-      slug?: string;
-      order?: number;
-      isActive?: boolean;
-    } = {};
-    if (dto.nameEs !== undefined) updates.nameEs = dto.nameEs;
-    if (dto.nameEn !== undefined) updates.nameEn = dto.nameEn;
-    if (dto.slug !== undefined) updates.slug = dto.slug.trim().toLowerCase();
-    if (dto.order !== undefined) updates.order = dto.order;
-    if (dto.isActive !== undefined) updates.isActive = dto.isActive;
-    return this.sectionRepository.update(id, updates as Partial<SectionEntity>);
+
+    const data: Prisma.SectionUpdateInput = {};
+    if (dto.nameEs !== undefined) data.nameEs = dto.nameEs;
+    if (dto.nameEn !== undefined) data.nameEn = dto.nameEn;
+    if (dto.slug !== undefined) data.slug = dto.slug.trim().toLowerCase();
+    if (dto.order !== undefined) data.order = dto.order;
+    if (dto.isActive !== undefined) data.isActive = dto.isActive;
+
+    return this.sectionRepository.update({
+      where: { id },
+      data,
+      include: SECTION_FULL_INCLUDE,
+    });
   }
 }

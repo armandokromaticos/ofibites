@@ -92,19 +92,19 @@ export class ProductSizeEntity {
     });
   }
 
-  toPrismaCreate(): Record<string, unknown> {
-    const data: Record<string, unknown> = {};
-    data.nameEs = this.props.nameEs;
-    data.nameEn = this.props.nameEn;
-    data.descriptionEs = this.props.descriptionEs;
-    data.descriptionEn = this.props.descriptionEn;
-    data.price = new Prisma.Decimal(this.props.price);
-    data.stock = this.props.stock;
-    data.sortOrder = this.props.sortOrder;
-    data.isDefault = this.props.isDefault;
-    data.isActive = this.props.isActive;
-    data.product = { connect: { id: this.props.productId } };
-    return data;
+  toPrismaCreate(): Prisma.ProductSizeCreateInput {
+    return {
+      nameEs: this.props.nameEs,
+      nameEn: this.props.nameEn,
+      descriptionEs: this.props.descriptionEs,
+      descriptionEn: this.props.descriptionEn,
+      price: new Prisma.Decimal(this.props.price),
+      stock: this.props.stock,
+      sortOrder: this.props.sortOrder,
+      isDefault: this.props.isDefault,
+      isActive: this.props.isActive,
+      product: { connect: { id: this.props.productId } },
+    };
   }
 
   toResponseDto(lang: "es" | "en" = "es"): ProductSizeResponseDto {

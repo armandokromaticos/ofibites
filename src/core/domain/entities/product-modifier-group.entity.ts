@@ -1,4 +1,7 @@
-import { ProductModifierGroup as PrismaProductModifierGroup } from "@prisma/client";
+import {
+  Prisma,
+  ProductModifierGroup as PrismaProductModifierGroup,
+} from "@prisma/client";
 import { CreateProductModifierGroupDto } from "../../application/dto/product-modifier-groups/create-product-modifier-group.dto";
 import { ProductModifierGroupResponseDto } from "../../application/dto/product-modifier-groups/product-modifier-group-response.dto";
 
@@ -85,17 +88,17 @@ export class ProductModifierGroupEntity {
     });
   }
 
-  toPrismaCreate(): Record<string, unknown> {
-    const data: Record<string, unknown> = {};
-    data.nameEs = this.props.nameEs;
-    data.nameEn = this.props.nameEn;
-    data.descriptionEs = this.props.descriptionEs;
-    data.descriptionEn = this.props.descriptionEn;
-    data.minSelect = this.props.minSelect;
-    data.maxSelect = this.props.maxSelect;
-    data.sortOrder = this.props.sortOrder;
-    data.product = { connect: { id: this.props.productId } };
-    return data;
+  toPrismaCreate(): Prisma.ProductModifierGroupCreateInput {
+    return {
+      nameEs: this.props.nameEs,
+      nameEn: this.props.nameEn,
+      descriptionEs: this.props.descriptionEs,
+      descriptionEn: this.props.descriptionEn,
+      minSelect: this.props.minSelect,
+      maxSelect: this.props.maxSelect,
+      sortOrder: this.props.sortOrder,
+      product: { connect: { id: this.props.productId } },
+    };
   }
 
   toResponseDto(lang: "es" | "en" = "es"): ProductModifierGroupResponseDto {

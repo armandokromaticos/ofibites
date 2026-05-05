@@ -23,14 +23,18 @@ export class DeleteProductModifierUseCase {
     groupId: string,
     modifierId: string,
   ): Promise<void> {
-    const group = await this.groupRepository.findById(groupId);
+    const group = await this.groupRepository.findUnique({
+      where: { id: groupId },
+    });
     if (!group || group.productId !== productId) {
       throw new NotFoundException(
         `Modifier group with id ${groupId} not found for product ${productId}`,
       );
     }
 
-    const modifier = await this.modifierRepository.findById(modifierId);
+    const modifier = await this.modifierRepository.findUnique({
+      where: { id: modifierId },
+    });
     if (!modifier || modifier.groupId !== groupId) {
       throw new NotFoundException(
         `Modifier with id ${modifierId} not found in group ${groupId}`,

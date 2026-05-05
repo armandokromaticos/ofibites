@@ -16,7 +16,7 @@ export class DeleteProductUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    const existing = await this.productRepository.findById(id);
+    const existing = await this.productRepository.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Product with id "${id}" not found`);
     }

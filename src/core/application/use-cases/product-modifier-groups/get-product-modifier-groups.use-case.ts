@@ -11,6 +11,10 @@ export class GetProductModifierGroupsUseCase {
   ) {}
 
   async execute(productId: string): Promise<ProductModifierGroupEntity[]> {
-    return this.repository.findByProductId(productId);
+    const { data } = await this.repository.findMany({
+      where: { productId },
+      orderBy: { sortOrder: "asc" },
+    });
+    return data;
   }
 }

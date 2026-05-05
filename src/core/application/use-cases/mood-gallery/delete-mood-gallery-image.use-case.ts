@@ -26,7 +26,9 @@ export class DeleteMoodGalleryImageUseCase {
     moodGalleryId: string,
     field: "imageUrl" | "imageMobileUrl",
   ): Promise<MoodGalleryEntity> {
-    const existing = await this.moodGalleryRepository.findById(moodGalleryId);
+    const existing = await this.moodGalleryRepository.findUnique({
+      where: { id: moodGalleryId },
+    });
     if (!existing) {
       throw new NotFoundException(
         `MoodGallery with id ${moodGalleryId} not found`,
@@ -43,8 +45,9 @@ export class DeleteMoodGalleryImageUseCase {
     }
 
     // DB-first: clear the field so the record no longer references the file
-    const updated = await this.moodGalleryRepository.update(moodGalleryId, {
-      [field]: null,
+    const updated = await this.moodGalleryRepository.update({
+      where: { id: moodGalleryId },
+      data: { [field]: null },
     });
 
     // Best-effort storage cleanup

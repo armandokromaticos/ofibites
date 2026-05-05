@@ -12,7 +12,7 @@ export class DeleteBannerUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    const banner = await this.bannerRepository.findById(id);
+    const banner = await this.bannerRepository.findUnique({ where: { id } });
     if (!banner) {
       throw new NotFoundException(`Banner with id ${id} not found`);
     }

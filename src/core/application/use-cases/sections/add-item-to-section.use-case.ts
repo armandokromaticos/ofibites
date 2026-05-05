@@ -21,7 +21,9 @@ export class AddItemToSectionUseCase {
     sectionId: string,
     dto: AddSectionItemDto,
   ): Promise<SectionEntity> {
-    const existing = await this.sectionRepository.findById(sectionId);
+    const existing = await this.sectionRepository.findUnique({
+      where: { id: sectionId },
+    });
     if (!existing) {
       throw new NotFoundException(`Section with id ${sectionId} not found`);
     }

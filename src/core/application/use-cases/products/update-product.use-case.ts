@@ -4,8 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import type { IProductRepository } from "../../../domain/repositories/product.repository.interface";
-import { PRODUCT_REPOSITORY } from "../../../domain/repositories/product.repository.interface";
+import {
+  PRODUCT_FULL_INCLUDE,
+  PRODUCT_REPOSITORY,
+} from "../../../domain/repositories/product.repository.interface";
 import type { IProductSizeRepository } from "../../../domain/repositories/product-size.repository.interface";
 import { PRODUCT_SIZE_REPOSITORY } from "../../../domain/repositories/product-size.repository.interface";
 import { UpdateProductDto } from "../../dto/products/update-product.dto";
@@ -25,32 +29,43 @@ export class UpdateProductUseCase {
     if (!hasUpdates) {
       throw new BadRequestException("No fields provided for update");
     }
-    const existing = await this.productRepository.findById(id);
+    const existing = await this.productRepository.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Product with id ${id} not found`);
     }
 
-    const sizes = await this.productSizeRepository.findByProductId(id);
+    const { data: sizes } = await this.productSizeRepository.findMany({
+      where: { productId: id },
+    });
     const activeSizesWithStock = sizes.filter(
       (size) => size.isActive && size.stock !== null,
     );
 
-    // If the product has active sizes with stock, ignore manual stock
-    // and recalculate from sizes instead
-    if (activeSizesWithStock.length > 0) {
-      delete dto.stock;
+    const data: Prisma.ProductUpdateInput = {};
+    if (dto.nameEs !== undefined) data.nameEs = dto.nameEs;
+    if (dto.nameEn !== undefined) data.nameEn = dto.nameEn;
+    if (dto.descriptionEs !== undefined) data.descriptionEs = dto.descriptionEs;
+    if (dto.descriptionEn !== undefined) data.descriptionEn = dto.descriptionEn;
+    if (dto.basePrice !== undefined) {
+      data.basePrice = new Prisma.Decimal(dto.basePrice);
     }
-
-    await this.productRepository.update(id, dto as Partial<ProductEntity>);
+    if (dto.image !== undefined) data.image = dto.image;
+    if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
     if (activeSizesWithStock.length > 0) {
-      const totalStock = activeSizesWithStock.reduce(
+      // Recalcular stock desde sizes si hay tamaños con stock manual
+      data.stock = activeSizesWithStock.reduce(
         (sum, size) => sum + size.stock!,
         0,
       );
-      await this.productRepository.updateStock(id, totalStock);
+    } else if (dto.stock !== undefined) {
+      data.stock = dto.stock;
     }
 
-    return (await this.productRepository.findById(id))!;
+    return this.productRepository.update({
+      where: { id },
+      data,
+      include: PRODUCT_FULL_INCLUDE,
+    });
   }
 }

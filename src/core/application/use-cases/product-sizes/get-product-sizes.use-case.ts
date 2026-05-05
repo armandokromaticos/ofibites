@@ -11,6 +11,10 @@ export class GetProductSizesUseCase {
   ) {}
 
   async execute(productId: string): Promise<ProductSizeEntity[]> {
-    return this.productSizeRepository.findByProductId(productId);
+    const { data } = await this.productSizeRepository.findMany({
+      where: { productId },
+      orderBy: { sortOrder: "asc" },
+    });
+    return data;
   }
 }

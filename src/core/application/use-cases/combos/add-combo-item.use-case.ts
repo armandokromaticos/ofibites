@@ -21,12 +21,17 @@ export class AddComboItemUseCase {
   ) {}
 
   async execute(comboId: string, dto: AddComboItemDto): Promise<ComboEntity> {
-    const combo = await this.comboRepository.findById(comboId);
+    const combo = await this.comboRepository.findUnique({
+      where: { id: comboId },
+      include: { items: true },
+    });
     if (!combo) {
       throw new NotFoundException(`Combo with id ${comboId} not found`);
     }
 
-    const product = await this.productRepository.findById(dto.productId);
+    const product = await this.productRepository.findUnique({
+      where: { id: dto.productId },
+    });
     if (!product) {
       throw new NotFoundException(`Product with id ${dto.productId} not found`);
     }

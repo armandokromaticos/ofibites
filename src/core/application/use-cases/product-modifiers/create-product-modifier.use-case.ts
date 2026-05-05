@@ -19,7 +19,9 @@ export class CreateProductModifierUseCase {
     groupId: string,
     dto: CreateProductModifierDto,
   ): Promise<ProductModifierEntity> {
-    const group = await this.groupRepository.findById(groupId);
+    const group = await this.groupRepository.findUnique({
+      where: { id: groupId },
+    });
     if (!group) {
       throw new NotFoundException(
         `Modifier group with id "${groupId}" not found`,

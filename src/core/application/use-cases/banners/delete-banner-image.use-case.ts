@@ -26,7 +26,9 @@ export class DeleteBannerImageUseCase {
     bannerId: string,
     field: "imageUrl" | "imageMobileUrl",
   ): Promise<BannerEntity> {
-    const existing = await this.bannerRepository.findById(bannerId);
+    const existing = await this.bannerRepository.findUnique({
+      where: { id: bannerId },
+    });
     if (!existing) {
       throw new NotFoundException(`Banner with id ${bannerId} not found`);
     }
@@ -41,8 +43,9 @@ export class DeleteBannerImageUseCase {
     }
 
     // DB-first: clear the field so the banner no longer references the file
-    const updated = await this.bannerRepository.update(bannerId, {
-      [field]: null,
+    const updated = await this.bannerRepository.update({
+      where: { id: bannerId },
+      data: { [field]: null },
     });
 
     // Best-effort storage cleanup

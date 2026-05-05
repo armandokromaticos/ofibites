@@ -17,7 +17,10 @@ export class UpdateOrderStatusUseCase {
   ) {}
 
   async execute(orderId: string, newStatus: OrderStatus): Promise<OrderEntity> {
-    const order = await this.orderRepository.findById(orderId);
+    const order = await this.orderRepository.findUnique({
+      where: { id: orderId },
+      include: { items: { include: { modifiers: true } } },
+    });
     if (!order) {
       throw new NotFoundException(`Order with id ${orderId} not found`);
     }

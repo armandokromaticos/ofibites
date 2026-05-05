@@ -1,61 +1,53 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma/prisma.service";
 import { IAgencyCardRepository } from "../../domain/repositories/agency-card.repository.interface";
-import {
-  AgencyCardEntity,
-  UpdateAgencyCardParams,
-} from "../../domain/entities/agency-card.entity";
+import { AgencyCardEntity } from "../../domain/entities/agency-card.entity";
 
 @Injectable()
 export class AgencyCardRepository implements IAgencyCardRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(entity: AgencyCardEntity): Promise<AgencyCardEntity> {
-    const data = entity.toPrismaCreate();
-    const card = await this.prisma.agencyCard.create({ data });
+    const card = await this.prisma.agencyCard.create({
+      data: entity.toPrismaCreate(),
+    });
     return AgencyCardEntity.fromPrisma(card);
   }
 
-  async findById(id: string): Promise<AgencyCardEntity | null> {
-    const card = await this.prisma.agencyCard.findUnique({ where: { id } });
+  async findUnique(
+    args: Prisma.AgencyCardFindUniqueArgs,
+  ): Promise<AgencyCardEntity | null> {
+    const card = await this.prisma.agencyCard.findUnique(args);
     return card ? AgencyCardEntity.fromPrisma(card) : null;
   }
 
-  async findAll(): Promise<AgencyCardEntity[]> {
-    const cards = await this.prisma.agencyCard.findMany({
-      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
-    });
-    return cards.map((card) => AgencyCardEntity.fromPrisma(card));
+  async findMany(
+    args?: Prisma.AgencyCardFindManyArgs,
+  ): Promise<{ data: AgencyCardEntity[]; total?: number }> {
+    const rows = await this.prisma.agencyCard.findMany(args);
+    const data = rows.map((row) => AgencyCardEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+    if (hasPagination) {
+      const total = await this.prisma.agencyCard.count({ where: args?.where });
+      return { data, total };
+    }
+    return { data };
   }
 
-  async findAllActive(): Promise<AgencyCardEntity[]> {
-    const cards = await this.prisma.agencyCard.findMany({
-      where: { isActive: true },
-      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
-    });
-    return cards.map((card) => AgencyCardEntity.fromPrisma(card));
-  }
-
-  async findAllInactive(): Promise<AgencyCardEntity[]> {
-    const cards = await this.prisma.agencyCard.findMany({
-      where: { isActive: false },
-      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
-    });
-    return cards.map((card) => AgencyCardEntity.fromPrisma(card));
-  }
-
-  async update(
-    id: string,
-    data: UpdateAgencyCardParams,
-  ): Promise<AgencyCardEntity> {
-    const card = await this.prisma.agencyCard.update({
-      where: { id },
-      data,
-    });
+  async update(args: Prisma.AgencyCardUpdateArgs): Promise<AgencyCardEntity> {
+    const card = await this.prisma.agencyCard.update(args);
     return AgencyCardEntity.fromPrisma(card);
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.agencyCard.delete({ where: { id } });
+  }
+
+  async exists(args: Prisma.AgencyCardCountArgs): Promise<boolean> {
+    const count = await this.prisma.agencyCard.count(args);
+    return count > 0;
   }
 }

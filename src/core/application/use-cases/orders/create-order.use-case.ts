@@ -49,7 +49,9 @@ export class CreateOrderUseCase {
     const items: CreateOrderItemParams[] = [];
 
     for (const itemDto of dto.items) {
-      const product = await this.productRepository.findById(itemDto.productId);
+      const product = await this.productRepository.findUnique({
+        where: { id: itemDto.productId },
+      });
       if (!product) {
         throw new NotFoundException(
           `Product with id ${itemDto.productId} not found`,
@@ -59,7 +61,9 @@ export class CreateOrderUseCase {
       let unitPrice: number;
 
       if (itemDto.comboId) {
-        const combo = await this.comboRepository.findById(itemDto.comboId);
+        const combo = await this.comboRepository.findUnique({
+          where: { id: itemDto.comboId },
+        });
         if (!combo) {
           throw new NotFoundException(
             `Combo with id ${itemDto.comboId} not found`,
@@ -67,9 +71,9 @@ export class CreateOrderUseCase {
         }
         unitPrice = combo.price;
       } else if (itemDto.productSizeId) {
-        const size = await this.productSizeRepository.findById(
-          itemDto.productSizeId,
-        );
+        const size = await this.productSizeRepository.findUnique({
+          where: { id: itemDto.productSizeId },
+        });
         if (!size) {
           throw new NotFoundException(
             `ProductSize with id ${itemDto.productSizeId} not found`,
@@ -98,17 +102,17 @@ export class CreateOrderUseCase {
           : new Map<string, number>();
 
         for (const modDto of itemDto.modifiers) {
-          const modifier = await this.productModifierRepository.findById(
-            modDto.modifierId,
-          );
+          const modifier = await this.productModifierRepository.findUnique({
+            where: { id: modDto.modifierId },
+          });
           if (!modifier) {
             throw new NotFoundException(
               `ProductModifier with id ${modDto.modifierId} not found`,
             );
           }
-          const group = await this.productModifierGroupRepository.findById(
-            modifier.groupId,
-          );
+          const group = await this.productModifierGroupRepository.findUnique({
+            where: { id: modifier.groupId },
+          });
           if (!group || group.productId !== itemDto.productId) {
             throw new BadRequestException(
               `ProductModifier ${modDto.modifierId} does not belong to product ${itemDto.productId}`,

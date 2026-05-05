@@ -1,15 +1,19 @@
-import {
-  MoodGalleryEntity,
-  UpdateMoodGalleryParams,
-} from "../entities/mood-gallery.entity";
+import { Prisma } from "@prisma/client";
+import { MoodGalleryEntity } from "../entities/mood-gallery.entity";
 
 export const MOOD_GALLERY_REPOSITORY = Symbol("MOOD_GALLERY_REPOSITORY");
 
 export interface IMoodGalleryRepository {
   create(entity: MoodGalleryEntity): Promise<MoodGalleryEntity>;
-  findById(id: string): Promise<MoodGalleryEntity | null>;
-  findAll(section?: string): Promise<MoodGalleryEntity[]>;
-  findAllActive(section?: string): Promise<MoodGalleryEntity[]>;
-  update(id: string, data: UpdateMoodGalleryParams): Promise<MoodGalleryEntity>;
+  findUnique(
+    args: Prisma.MoodGalleryFindUniqueArgs,
+  ): Promise<MoodGalleryEntity | null>;
+  findMany(
+    args?: Prisma.MoodGalleryFindManyArgs,
+  ): Promise<{ data: MoodGalleryEntity[]; total?: number }>;
+  update(args: Prisma.MoodGalleryUpdateArgs): Promise<MoodGalleryEntity>;
   delete(id: string): Promise<void>;
+  exists(args: Prisma.MoodGalleryCountArgs): Promise<boolean>;
+
+  findAllActive(section?: string): Promise<MoodGalleryEntity[]>;
 }

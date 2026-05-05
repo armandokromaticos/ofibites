@@ -1,6 +1,16 @@
-import { User as PrismaUser } from "@prisma/client";
+import { Prisma, User as PrismaUser } from "@prisma/client";
 import { Role } from "../enums/role.enum";
 import { UserResponseDto } from "../../application/dto/users/user-response.dto";
+
+export interface CreateUserParams {
+  authId: string | null;
+  email: string;
+  name: string;
+  phone?: string | null;
+  birthDate?: Date | null;
+  role?: Role;
+  isActive?: boolean;
+}
 
 export class UserEntity {
   id: string;
@@ -30,6 +40,33 @@ export class UserEntity {
     entity.createdAt = prismaUser.createdAt;
     entity.updatedAt = prismaUser.updatedAt;
     return entity;
+  }
+
+  static fromCreateParams(params: CreateUserParams): UserEntity {
+    const entity = new UserEntity();
+    entity.id = "";
+    entity.authId = params.authId;
+    entity.email = params.email;
+    entity.name = params.name;
+    entity.phone = params.phone ?? null;
+    entity.birthDate = params.birthDate ?? null;
+    entity.role = params.role ?? Role.CLIENT;
+    entity.isActive = params.isActive ?? true;
+    entity.createdAt = new Date();
+    entity.updatedAt = new Date();
+    return entity;
+  }
+
+  toPrismaCreate(): Prisma.UserCreateInput {
+    return {
+      authId: this.authId,
+      email: this.email,
+      name: this.name,
+      phone: this.phone,
+      birthDate: this.birthDate,
+      role: this.role,
+      isActive: this.isActive,
+    };
   }
 
   toResponse(): UserResponseDto {

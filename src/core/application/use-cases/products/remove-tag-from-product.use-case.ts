@@ -11,7 +11,9 @@ export class RemoveTagFromProductUseCase {
   ) {}
 
   async execute(productId: string, tagId: string): Promise<void> {
-    const existing = await this.productRepository.findById(productId);
+    const existing = await this.productRepository.findUnique({
+      where: { id: productId },
+    });
     if (!existing) {
       throw new NotFoundException(`Product with id ${productId} not found`);
     }

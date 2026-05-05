@@ -1,14 +1,16 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
+  Headers,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Role } from "../../../core/domain/enums/role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
@@ -22,6 +24,9 @@ import { GetOrderUseCase } from "../../../core/application/use-cases/orders/get-
 import { GetOrdersUseCase } from "../../../core/application/use-cases/orders/get-orders.use-case";
 import { CancelOrderUseCase } from "../../../core/application/use-cases/orders/cancel-order.use-case";
 import { UpdateOrderStatusUseCase } from "../../../core/application/use-cases/orders/update-order-status.use-case";
+
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @ApiTags("Orders")
 @Controller("orders")
@@ -48,24 +53,55 @@ export class OrdersController {
   }
 
   @Get()
-  @Roles(Role.SUPER_ADMIN, Role.CLIENT)
-  @ApiOperation({ summary: "Listar ordenes (propias o todas para ADMIN)" })
+  @Roles(
+    Role.SUPER_ADMIN,
+    Role.OPS_ADMIN,
+    Role.FINANCE_ADMIN,
+    Role.KAM,
+    Role.OPERATOR,
+    Role.CLIENT,
+  )
+  @ApiOperation({
+    summary:
+      "Listar órdenes filtradas según rol y header X-Company-Id (opcional)",
+  })
+  @ApiHeader({
+    name: "X-Company-Id",
+    required: false,
+    description:
+      "Si se envía, restringe la respuesta a esa empresa (validando acceso del usuario).",
+  })
   async findAllOrders(
     @CurrentUser() user: { id: string; role: Role },
+    @Headers("x-company-id") companyIdHeader?: string,
   ): Promise<OrderResponseDto[]> {
-    const entities = await this.getOrdersUseCase.execute(user.id, user.role);
-    return entities.map((order) => order.toResponseDto());
+    const companyId = this.parseCompanyIdHeader(companyIdHeader);
+    const entities = await this.getOrdersUseCase.execute(
+      user.id,
+      user.role,
+      companyId,
+    );
+    const maskPrices = user.role === Role.OPERATOR;
+    return entities.map((order) => order.toResponseDto({ maskPrices }));
   }
 
   @Get(":id")
-  @Roles(Role.SUPER_ADMIN, Role.CLIENT)
+  @Roles(
+    Role.SUPER_ADMIN,
+    Role.OPS_ADMIN,
+    Role.FINANCE_ADMIN,
+    Role.KAM,
+    Role.OPERATOR,
+    Role.CLIENT,
+  )
   @ApiOperation({ summary: "Obtener orden por ID" })
   async findOneOrder(
     @Param("id", ParseUUIDPipe) id: string,
     @CurrentUser() user: { id: string; role: Role },
   ): Promise<OrderResponseDto> {
     const entity = await this.getOrderUseCase.execute(id, user.id, user.role);
-    return entity.toResponseDto();
+    const maskPrices = user.role === Role.OPERATOR;
+    return entity.toResponseDto({ maskPrices });
   }
 
   @Patch(":id/status")
@@ -92,5 +128,19 @@ export class OrdersController {
       user.role,
     );
     return entity.toResponseDto();
+  }
+
+  private parseCompanyIdHeader(value: string | undefined): string | undefined {
+    if (!value) {
+      return undefined;
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+    if (!UUID_REGEX.test(trimmed)) {
+      throw new BadRequestException("X-Company-Id debe ser un UUID válido");
+    }
+    return trimmed;
   }
 }

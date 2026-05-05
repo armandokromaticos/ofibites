@@ -266,11 +266,11 @@ model Order {
 
   user            User?           @relation("OrderUser", fields: [userId], references: [id])
   coupon          Coupon?         @relation(fields: [couponId], references: [id])
-  company         Company?        @relation(fields: [companyId], references: [id])
-  branch          Branch?         @relation(fields: [branchId], references: [id])
-  department      Department?     @relation(fields: [departmentId], references: [id])
-  createdBy       User?           @relation("OrderCreatedBy", fields: [createdById], references: [id])
-  deliveryAddress CompanyAddress? @relation(fields: [deliveryAddressId], references: [id])
+  company         Company?        @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  branch          Branch?         @relation(fields: [companyId, branchId], references: [companyId, id], onDelete: Restrict)
+  department      Department?     @relation(fields: [companyId, departmentId], references: [companyId, id], onDelete: Restrict)
+  createdBy       User?           @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  deliveryAddress CompanyAddress? @relation(fields: [companyId, deliveryAddressId], references: [companyId, id], onDelete: Restrict)
   items           OrderItem[]
   couponUsage     CouponUsage?
 
@@ -279,6 +279,7 @@ model Order {
   @@index([createdById])
   @@index([branchId])
   @@index([departmentId])
+  @@index([deliveryAddressId])
   @@map("orders")
 }
 
@@ -332,6 +333,7 @@ model Branch {
   members CompanyMember[]
   orders  Order[]
 
+  @@unique([companyId, id])
   @@index([companyId])
   @@map("branches")
 }
@@ -348,6 +350,7 @@ model Department {
   members CompanyMember[]
   orders  Order[]
 
+  @@unique([companyId, id])
   @@index([companyId])
   @@map("departments")
 }
@@ -371,6 +374,7 @@ model CompanyAddress {
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   orders  Order[]
 
+  @@unique([companyId, id])
   @@index([companyId])
   @@map("company_addresses")
 }
@@ -391,8 +395,8 @@ model CompanyMember {
 
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  branch     Branch?     @relation(fields: [branchId], references: [id])
-  department Department? @relation(fields: [departmentId], references: [id])
+  branch     Branch?     @relation(fields: [companyId, branchId], references: [companyId, id])
+  department Department? @relation(fields: [companyId, departmentId], references: [companyId, id])
 
   @@unique([userId, companyId])
   @@index([companyId])

@@ -11,11 +11,6 @@ import { CreateUserDto } from "../../dto/users/create-user.dto";
 import { UserEntity } from "../../../domain/entities/user.entity";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 
-/**
- * Parsea un string YYYY-MM-DD a un Date anclado a medianoche UTC.
- * Evita desplazamientos por zona horaria al persistir o leer componentes
- * de la fecha. Siempre usar getUTCDate/getUTCMonth/getUTCFullYear al leer.
- */
 function parseBirthDateToUTC(value: string): Date {
   const [year, month, day] = value.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day));
@@ -56,18 +51,19 @@ export class CreateUserUseCase {
     this.logger.log(`Usuario creado en Auth: ${authId}`);
 
     try {
-      const user = await this.userRepository.create({
+      const entity = UserEntity.fromCreateParams({
         authId,
         email: dto.email,
         name: dto.name,
         phone: dto.phone ?? null,
         birthDate: dto.birthDate ? parseBirthDateToUTC(dto.birthDate) : null,
       });
+      const user = await this.userRepository.create(entity);
 
       this.logger.log(
         `Usuario sincronizado en DB con rol ${user.role}: ${authId}`,
       );
-      return UserEntity.fromPrisma(user);
+      return user;
     } catch {
       this.logger.error(
         `Error al sincronizar en DB, revirtiendo Auth: ${authId}`,

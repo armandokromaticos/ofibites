@@ -1,33 +1,55 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma, User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma/prisma.service";
 import { IUserRepository } from "../../domain/repositories/user.repository.interface";
+import { UserEntity } from "../../domain/entities/user.entity";
 
 @Injectable()
 export class UserRepository implements IUserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: Prisma.UserCreateInput): Promise<User> {
-    return this.prisma.user.create({ data });
+  async create(entity: UserEntity): Promise<UserEntity> {
+    const created = await this.prisma.user.create({
+      data: entity.toPrismaCreate(),
+    });
+    return UserEntity.fromPrisma(created);
   }
 
-  async findById(id: string): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { id } });
+  async findUnique(
+    args: Prisma.UserFindUniqueArgs,
+  ): Promise<UserEntity | null> {
+    const user = await this.prisma.user.findUnique(args);
+    return user ? UserEntity.fromPrisma(user) : null;
   }
 
-  async findByAuthId(authId: string): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { authId } });
+  async findMany(
+    args?: Prisma.UserFindManyArgs,
+  ): Promise<{ data: UserEntity[]; total?: number }> {
+    const rows = await this.prisma.user.findMany(args);
+    const data = rows.map((row) => UserEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+
+    if (hasPagination) {
+      const total = await this.prisma.user.count({ where: args?.where });
+      return { data, total };
+    }
+
+    return { data };
   }
 
-  async findAll(): Promise<User[]> {
-    return this.prisma.user.findMany();
-  }
-
-  async update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
-    return this.prisma.user.update({ where: { id }, data });
+  async update(args: Prisma.UserUpdateArgs): Promise<UserEntity> {
+    const updated = await this.prisma.user.update(args);
+    return UserEntity.fromPrisma(updated);
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.user.delete({ where: { id } });
+  }
+
+  async exists(args: Prisma.UserCountArgs): Promise<boolean> {
+    const count = await this.prisma.user.count(args);
+    return count > 0;
   }
 }

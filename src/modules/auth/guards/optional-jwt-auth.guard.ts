@@ -38,7 +38,9 @@ export class OptionalJwtAuthGuard implements CanActivate {
       return true;
     }
 
-    const dbUser = await this.userRepository.findByAuthId(data.user.id);
+    const dbUser = await this.userRepository.findUnique({
+      where: { authId: data.user.id },
+    });
     if (!dbUser) {
       this.logger.debug(
         `Optional auth: valid Supabase user but no DB record; continuing as guest (authId=${data.user.id})`,

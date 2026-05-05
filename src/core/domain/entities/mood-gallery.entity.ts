@@ -1,4 +1,4 @@
-import { MoodGallery as PrismaMoodGallery } from "@prisma/client";
+import { MoodGallery as PrismaMoodGallery, Prisma } from "@prisma/client";
 import { MoodGalleryResponseDto } from "../../application/dto/mood-gallery/mood-gallery-response.dto";
 
 interface MoodGalleryProps {
@@ -22,17 +22,6 @@ export interface CreateMoodGalleryParams {
   altEs: string;
   altEn: string;
   section?: string;
-  order?: number;
-  isActive?: boolean;
-}
-
-export interface UpdateMoodGalleryParams {
-  title?: string | null;
-  imageUrl?: string | null;
-  imageMobileUrl?: string | null;
-  altEs?: string;
-  altEn?: string;
-  section?: string | null;
   order?: number;
   isActive?: boolean;
 }
@@ -110,7 +99,7 @@ export class MoodGalleryEntity {
     });
   }
 
-  toPrismaCreate() {
+  toPrismaCreate(): Prisma.MoodGalleryCreateInput {
     return {
       title: this.props.title,
       imageUrl: this.props.imageUrl,

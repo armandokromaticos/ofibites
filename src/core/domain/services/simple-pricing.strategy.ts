@@ -25,7 +25,9 @@ export class SimplePricingStrategy implements PricingStrategy {
   ): Promise<Money> {
     void context; // Reserved for future use (size/modifier pricing)
 
-    const product = await this.productRepository.findById(productId);
+    const product = await this.productRepository.findUnique({
+      where: { id: productId },
+    });
     if (!product) {
       throw new EntityNotFoundException("Product", productId);
     }

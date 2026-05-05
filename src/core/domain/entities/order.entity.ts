@@ -2,6 +2,7 @@ import {
   Order as PrismaOrder,
   OrderItem as PrismaOrderItem,
   OrderItemModifier as PrismaOrderItemModifier,
+  Prisma,
 } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 import { OrderStatus } from "../enums/order-status.enum";
@@ -225,39 +226,79 @@ export class OrderEntity {
     });
   }
 
-  toPrismaCreate(): Record<string, unknown> {
-    return {
-      userId: this.props.userId,
-      couponId: this.props.couponId,
-      companyId: this.props.companyId,
-      branchId: this.props.branchId,
-      departmentId: this.props.departmentId,
-      createdById: this.props.createdById,
-      deliveryAddressId: this.props.deliveryAddressId,
+  toPrismaCreate(): Prisma.OrderCreateInput {
+    const data: Prisma.OrderCreateInput = {
+      priority: this.props.priority,
+      subtotal: new Prisma.Decimal(this.props.subtotal),
+      discount: new Prisma.Decimal(this.props.discount),
+      total: new Prisma.Decimal(this.props.total),
       deliveryDate: this.props.deliveryDate,
       deliveryTime: this.props.deliveryTime,
       notes: this.props.notes,
-      priority: this.props.priority,
-      subtotal: this.props.subtotal,
-      discount: this.props.discount,
-      total: this.props.total,
       items: {
         create: (this.props.items ?? []).map((item) => ({
-          productId: item.productId,
-          productSizeId: item.productSizeId,
-          comboId: item.comboId,
+          product: { connect: { id: item.productId } },
+          productSize: item.productSizeId
+            ? { connect: { id: item.productSizeId } }
+            : undefined,
+          combo: item.comboId ? { connect: { id: item.comboId } } : undefined,
           quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          subtotal: item.subtotal,
+          unitPrice: new Prisma.Decimal(item.unitPrice),
+          subtotal: new Prisma.Decimal(item.subtotal),
           modifiers: {
             create: item.modifiers.map((modifier) => ({
-              modifierId: modifier.modifierId,
-              priceAdjustment: modifier.priceAdjustment,
+              modifier: { connect: { id: modifier.modifierId } },
+              priceAdjustment: new Prisma.Decimal(modifier.priceAdjustment),
             })),
           },
         })),
       },
     };
+
+    if (this.props.userId) {
+      data.user = { connect: { id: this.props.userId } };
+    }
+    if (this.props.couponId) {
+      data.coupon = { connect: { id: this.props.couponId } };
+    }
+    if (this.props.companyId) {
+      data.company = { connect: { id: this.props.companyId } };
+      if (this.props.branchId) {
+        data.branch = {
+          connect: {
+            companyId_id: {
+              companyId: this.props.companyId,
+              id: this.props.branchId,
+            },
+          },
+        };
+      }
+      if (this.props.departmentId) {
+        data.department = {
+          connect: {
+            companyId_id: {
+              companyId: this.props.companyId,
+              id: this.props.departmentId,
+            },
+          },
+        };
+      }
+      if (this.props.deliveryAddressId) {
+        data.deliveryAddress = {
+          connect: {
+            companyId_id: {
+              companyId: this.props.companyId,
+              id: this.props.deliveryAddressId,
+            },
+          },
+        };
+      }
+    }
+    if (this.props.createdById) {
+      data.createdBy = { connect: { id: this.props.createdById } };
+    }
+
+    return data;
   }
 
   static fromPrisma(prisma: PrismaOrderWithRelations): OrderEntity {
@@ -302,10 +343,11 @@ export class OrderEntity {
     return new OrderEntity(props);
   }
 
-  toResponseDto(): OrderResponseDto {
+  toResponseDto(options?: { maskPrices?: boolean }): OrderResponseDto {
     if (!this.props.id) {
       throw new Error("Cannot convert unpersisted entity to response DTO");
     }
+    const maskPrices = options?.maskPrices ?? false;
     const dto = new OrderResponseDto();
     dto.id = this.props.id;
     dto.userId = this.props.userId;
@@ -320,9 +362,9 @@ export class OrderEntity {
     dto.notes = this.props.notes;
     dto.priority = this.props.priority;
     dto.status = this.props.status;
-    dto.subtotal = this.props.subtotal;
-    dto.discount = this.props.discount;
-    dto.total = this.props.total;
+    dto.subtotal = maskPrices ? null : this.props.subtotal;
+    dto.discount = maskPrices ? null : this.props.discount;
+    dto.total = maskPrices ? null : this.props.total;
     dto.createdAt = this.props.createdAt;
     dto.updatedAt = this.props.updatedAt;
 
@@ -339,8 +381,8 @@ export class OrderEntity {
         itemDto.productSizeId = item.productSizeId;
         itemDto.comboId = item.comboId;
         itemDto.quantity = item.quantity;
-        itemDto.unitPrice = item.unitPrice;
-        itemDto.subtotal = item.subtotal;
+        itemDto.unitPrice = maskPrices ? null : item.unitPrice;
+        itemDto.subtotal = maskPrices ? null : item.subtotal;
         itemDto.modifiers = item.modifiers.map((modifier) => {
           if (!modifier.id) {
             throw new Error(
@@ -350,7 +392,7 @@ export class OrderEntity {
           const modDto = new OrderItemModifierResponseDto();
           modDto.id = modifier.id;
           modDto.modifierId = modifier.modifierId;
-          modDto.priceAdjustment = modifier.priceAdjustment;
+          modDto.priceAdjustment = maskPrices ? null : modifier.priceAdjustment;
           return modDto;
         });
         return itemDto;

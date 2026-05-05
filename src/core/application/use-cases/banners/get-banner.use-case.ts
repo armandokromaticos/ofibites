@@ -11,7 +11,7 @@ export class GetBannerUseCase {
   ) {}
 
   async execute(id: string): Promise<BannerEntity> {
-    const banner = await this.bannerRepository.findById(id);
+    const banner = await this.bannerRepository.findUnique({ where: { id } });
     if (!banner) {
       throw new NotFoundException(`Banner with id ${id} not found`);
     }

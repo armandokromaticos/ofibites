@@ -10,7 +10,7 @@ export class DeleteSectionUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    const existing = await this.sectionRepository.findById(id);
+    const existing = await this.sectionRepository.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Section with id ${id} not found`);
     }

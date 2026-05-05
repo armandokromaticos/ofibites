@@ -35,7 +35,9 @@ export class UploadBannerImageUseCase {
     field: "imageUrl" | "imageMobileUrl",
     file: UploadFileInput,
   ): Promise<BannerEntity> {
-    const existing = await this.bannerRepository.findById(bannerId);
+    const existing = await this.bannerRepository.findUnique({
+      where: { id: bannerId },
+    });
     if (!existing) {
       throw new NotFoundException(`Banner with id ${bannerId} not found`);
     }
@@ -89,6 +91,9 @@ export class UploadBannerImageUseCase {
       );
     }
 
-    return this.bannerRepository.update(bannerId, { [field]: publicUrl });
+    return this.bannerRepository.update({
+      where: { id: bannerId },
+      data: { [field]: publicUrl },
+    });
   }
 }

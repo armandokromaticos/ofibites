@@ -110,17 +110,17 @@ export class ProductModifierEntity {
     });
   }
 
-  toPrismaCreate(): Record<string, unknown> {
-    const data: Record<string, unknown> = {};
-    data.nameEs = this.props.nameEs;
-    data.nameEn = this.props.nameEn;
-    data.priceAdjustment = new Prisma.Decimal(this.props.priceAdjustment);
-    data.isDefault = this.props.isDefault;
-    data.isActive = this.props.isActive;
-    data.sizeRestricted = this.props.sizeRestricted;
-    data.sortOrder = this.props.sortOrder;
-    data.group = { connect: { id: this.props.groupId } };
-    return data;
+  toPrismaCreate(): Prisma.ProductModifierCreateInput {
+    return {
+      nameEs: this.props.nameEs,
+      nameEn: this.props.nameEn,
+      priceAdjustment: new Prisma.Decimal(this.props.priceAdjustment),
+      isDefault: this.props.isDefault,
+      isActive: this.props.isActive,
+      sizeRestricted: this.props.sizeRestricted,
+      sortOrder: this.props.sortOrder,
+      group: { connect: { id: this.props.groupId } },
+    };
   }
 
   toResponseDto(lang: "es" | "en" = "es"): ProductModifierResponseDto {

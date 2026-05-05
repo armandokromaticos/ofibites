@@ -3,7 +3,8 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma/prisma.service";
 import {
   IOrderRepository,
-  OrderFilters,
+  ORDER_FULL_INCLUDE,
+  OrderListFilters,
 } from "../../domain/repositories/order.repository.interface";
 import { OrderEntity } from "../../domain/entities/order.entity";
 import { OrderStatus } from "../../domain/enums/order-status.enum";
@@ -12,52 +13,80 @@ import { OrderStatus } from "../../domain/enums/order-status.enum";
 export class OrderRepository implements IOrderRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private static readonly ORDER_INCLUDE = {
-    items: {
-      include: { modifiers: true },
-    },
-  };
-
   async create(entity: OrderEntity): Promise<OrderEntity> {
-    const data = entity.toPrismaCreate();
     const order = await this.prisma.order.create({
-      data: data as Prisma.OrderCreateInput,
-      include: OrderRepository.ORDER_INCLUDE,
+      data: entity.toPrismaCreate(),
+      include: ORDER_FULL_INCLUDE,
     });
     return OrderEntity.fromPrisma(order);
   }
 
-  async findById(id: string): Promise<OrderEntity | null> {
-    const order = await this.prisma.order.findUnique({
-      where: { id },
-      include: OrderRepository.ORDER_INCLUDE,
-    });
+  async findUnique(
+    args: Prisma.OrderFindUniqueArgs,
+  ): Promise<OrderEntity | null> {
+    const order = await this.prisma.order.findUnique(args);
     return order ? OrderEntity.fromPrisma(order) : null;
   }
 
-  async findByUserId(userId: string): Promise<OrderEntity[]> {
-    const orders = await this.prisma.order.findMany({
-      where: { userId },
-      include: OrderRepository.ORDER_INCLUDE,
-      orderBy: { createdAt: "desc" },
-    });
-    return orders.map((order) => OrderEntity.fromPrisma(order));
+  async findMany(
+    args?: Prisma.OrderFindManyArgs,
+  ): Promise<{ data: OrderEntity[]; total?: number }> {
+    const rows = await this.prisma.order.findMany(args);
+    const data = rows.map((row) => OrderEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+    if (hasPagination) {
+      const total = await this.prisma.order.count({ where: args?.where });
+      return { data, total };
+    }
+    return { data };
   }
 
-  async findAll(filters?: OrderFilters): Promise<OrderEntity[]> {
+  async update(args: Prisma.OrderUpdateArgs): Promise<OrderEntity> {
+    const order = await this.prisma.order.update(args);
+    return OrderEntity.fromPrisma(order);
+  }
+
+  async exists(args: Prisma.OrderCountArgs): Promise<boolean> {
+    const count = await this.prisma.order.count(args);
+    return count > 0;
+  }
+
+  async findVisible(filters: OrderListFilters): Promise<OrderEntity[]> {
     const where: Prisma.OrderWhereInput = {};
 
-    if (filters?.userId) {
-      where.userId = filters.userId;
+    switch (filters.visibility.type) {
+      case "all":
+        break;
+      case "byCompany":
+        where.companyId = filters.visibility.companyId;
+        break;
+      case "byCompanies":
+        if (filters.visibility.companyIds.length === 0) {
+          return [];
+        }
+        where.companyId = { in: filters.visibility.companyIds };
+        break;
+      case "byUserOrCompanies": {
+        const ors: Prisma.OrderWhereInput[] = [
+          { userId: filters.visibility.userId },
+        ];
+        if (filters.visibility.companyIds.length > 0) {
+          ors.push({ companyId: { in: filters.visibility.companyIds } });
+        }
+        where.OR = ors;
+        break;
+      }
     }
 
-    if (filters?.status && filters.status.length > 0) {
-      where.status = { in: filters.status };
+    if (filters.statuses && filters.statuses.length > 0) {
+      where.status = { in: filters.statuses };
     }
 
     const orders = await this.prisma.order.findMany({
       where,
-      include: OrderRepository.ORDER_INCLUDE,
+      include: ORDER_FULL_INCLUDE,
       orderBy: { createdAt: "desc" },
     });
     return orders.map((order) => OrderEntity.fromPrisma(order));
@@ -67,7 +96,7 @@ export class OrderRepository implements IOrderRepository {
     const order = await this.prisma.order.update({
       where: { id },
       data: { status },
-      include: OrderRepository.ORDER_INCLUDE,
+      include: ORDER_FULL_INCLUDE,
     });
     return OrderEntity.fromPrisma(order);
   }

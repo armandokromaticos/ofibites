@@ -11,12 +11,12 @@ export class GetAgencyCardsUseCase {
   ) {}
 
   async execute(activeFilter?: boolean): Promise<AgencyCardEntity[]> {
-    if (activeFilter === true) {
-      return await this.repository.findAllActive();
-    }
-    if (activeFilter === false) {
-      return await this.repository.findAllInactive();
-    }
-    return await this.repository.findAll();
+    const where =
+      activeFilter === undefined ? undefined : { isActive: activeFilter };
+    const { data } = await this.repository.findMany({
+      where,
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+    });
+    return data;
   }
 }

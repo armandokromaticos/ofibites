@@ -1,11 +1,9 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import type { IAgencyCardRepository } from "../../../domain/repositories/agency-card.repository.interface";
 import { AGENCY_CARD_REPOSITORY } from "../../../domain/repositories/agency-card.repository.interface";
 import { UpdateAgencyCardDto } from "../../dto/agency-cards/update-agency-card.dto";
-import {
-  AgencyCardEntity,
-  UpdateAgencyCardParams,
-} from "../../../domain/entities/agency-card.entity";
+import { AgencyCardEntity } from "../../../domain/entities/agency-card.entity";
 
 @Injectable()
 export class UpdateAgencyCardUseCase {
@@ -18,12 +16,12 @@ export class UpdateAgencyCardUseCase {
     id: string,
     dto: UpdateAgencyCardDto,
   ): Promise<AgencyCardEntity> {
-    const existing = await this.repository.findById(id);
+    const existing = await this.repository.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Agency card with id ${id} not found`);
     }
 
-    const data: UpdateAgencyCardParams = {};
+    const data: Prisma.AgencyCardUpdateInput = {};
 
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.location !== undefined) data.location = dto.location;
@@ -38,6 +36,6 @@ export class UpdateAgencyCardUseCase {
     if (dto.order !== undefined) data.order = dto.order;
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
-    return await this.repository.update(id, data);
+    return this.repository.update({ where: { id }, data });
   }
 }

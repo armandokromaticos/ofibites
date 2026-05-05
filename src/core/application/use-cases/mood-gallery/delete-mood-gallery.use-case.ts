@@ -14,7 +14,9 @@ export class DeleteMoodGalleryUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    const item = await this.moodGalleryRepository.findById(id);
+    const item = await this.moodGalleryRepository.findUnique({
+      where: { id },
+    });
     if (!item) {
       throw new NotFoundException(`MoodGallery with id ${id} not found`);
     }
