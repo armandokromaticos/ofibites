@@ -1,4 +1,10 @@
-import { Department as PrismaDepartment } from "@prisma/client";
+import { Department as PrismaDepartment, Prisma } from "@prisma/client";
+
+export interface CreateDepartmentParams {
+  companyId: string;
+  name: string;
+  isActive?: boolean;
+}
 
 export class DepartmentEntity {
   id: string;
@@ -17,5 +23,24 @@ export class DepartmentEntity {
     entity.createdAt = prisma.createdAt;
     entity.updatedAt = prisma.updatedAt;
     return entity;
+  }
+
+  static fromCreateParams(params: CreateDepartmentParams): DepartmentEntity {
+    const entity = new DepartmentEntity();
+    entity.id = "";
+    entity.companyId = params.companyId;
+    entity.name = params.name.trim();
+    entity.isActive = params.isActive ?? true;
+    entity.createdAt = new Date();
+    entity.updatedAt = new Date();
+    return entity;
+  }
+
+  toPrismaCreate(): Prisma.DepartmentCreateInput {
+    return {
+      name: this.name,
+      isActive: this.isActive,
+      company: { connect: { id: this.companyId } },
+    };
   }
 }

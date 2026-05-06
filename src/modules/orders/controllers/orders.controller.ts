@@ -42,13 +42,17 @@ export class OrdersController {
   ) {}
 
   @Post()
-  @Roles(Role.SUPER_ADMIN, Role.CLIENT)
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.FINANCE_ADMIN, Role.CLIENT)
   @ApiOperation({ summary: "Crear orden con items" })
   async createOrder(
     @Body() dto: CreateOrderDto,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<OrderResponseDto> {
-    const entity = await this.createOrderUseCase.execute(user.id, dto);
+    const entity = await this.createOrderUseCase.execute(
+      user.id,
+      user.role,
+      dto,
+    );
     return entity.toResponseDto();
   }
 

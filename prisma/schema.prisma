@@ -248,11 +248,11 @@ model Order {
   id                String        @id @default(uuid())
   userId            String?       @map("user_id")
   couponId          String?       @map("coupon_id")
-  companyId         String?       @map("company_id")
+  companyId         String        @map("company_id")
   branchId          String?       @map("branch_id")
   departmentId      String?       @map("department_id")
-  createdById       String?       @map("created_by_id")
-  deliveryAddressId String?       @map("delivery_address_id")
+  createdById       String        @map("created_by_id")
+  deliveryAddressId String        @map("delivery_address_id")
   deliveryDate      DateTime?     @map("delivery_date") @db.Date
   deliveryTime      String?       @map("delivery_time")
   notes             String?
@@ -264,13 +264,13 @@ model Order {
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
 
-  user            User?           @relation("OrderUser", fields: [userId], references: [id])
-  coupon          Coupon?         @relation(fields: [couponId], references: [id])
-  company         Company?        @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  branch          Branch?         @relation(fields: [companyId, branchId], references: [companyId, id], onDelete: Restrict)
-  department      Department?     @relation(fields: [companyId, departmentId], references: [companyId, id], onDelete: Restrict)
-  createdBy       User?           @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
-  deliveryAddress CompanyAddress? @relation(fields: [companyId, deliveryAddressId], references: [companyId, id], onDelete: Restrict)
+  user            User?          @relation("OrderUser", fields: [userId], references: [id])
+  coupon          Coupon?        @relation(fields: [couponId], references: [id])
+  company         Company        @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  branch          Branch?        @relation(fields: [companyId, branchId], references: [companyId, id], onDelete: Restrict)
+  department      Department?    @relation(fields: [companyId, departmentId], references: [companyId, id], onDelete: Restrict)
+  createdBy       User           @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  deliveryAddress CompanyAddress @relation(fields: [companyId, deliveryAddressId], references: [companyId, id], onDelete: Restrict)
   items           OrderItem[]
   couponUsage     CouponUsage?
 

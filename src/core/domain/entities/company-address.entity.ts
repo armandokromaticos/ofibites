@@ -1,4 +1,21 @@
-import { CompanyAddress as PrismaCompanyAddress } from "@prisma/client";
+import {
+  CompanyAddress as PrismaCompanyAddress,
+  Prisma,
+} from "@prisma/client";
+
+export interface CreateCompanyAddressParams {
+  companyId: string;
+  label: string;
+  line1: string;
+  city: string;
+  country: string;
+  line2?: string | null;
+  reference?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  isBilling?: boolean;
+  isShipping?: boolean;
+}
 
 export class CompanyAddressEntity {
   id: string;
@@ -33,5 +50,42 @@ export class CompanyAddressEntity {
     entity.createdAt = prisma.createdAt;
     entity.updatedAt = prisma.updatedAt;
     return entity;
+  }
+
+  static fromCreateParams(
+    params: CreateCompanyAddressParams,
+  ): CompanyAddressEntity {
+    const entity = new CompanyAddressEntity();
+    entity.id = "";
+    entity.companyId = params.companyId;
+    entity.label = params.label.trim();
+    entity.line1 = params.line1.trim();
+    entity.line2 = params.line2 ?? null;
+    entity.reference = params.reference ?? null;
+    entity.city = params.city.trim();
+    entity.state = params.state ?? null;
+    entity.country = params.country.trim();
+    entity.zip = params.zip ?? null;
+    entity.isBilling = params.isBilling ?? false;
+    entity.isShipping = params.isShipping ?? true;
+    entity.createdAt = new Date();
+    entity.updatedAt = new Date();
+    return entity;
+  }
+
+  toPrismaCreate(): Prisma.CompanyAddressCreateInput {
+    return {
+      label: this.label,
+      line1: this.line1,
+      line2: this.line2,
+      reference: this.reference,
+      city: this.city,
+      state: this.state,
+      country: this.country,
+      zip: this.zip,
+      isBilling: this.isBilling,
+      isShipping: this.isShipping,
+      company: { connect: { id: this.companyId } },
+    };
   }
 }

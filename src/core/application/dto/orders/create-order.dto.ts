@@ -16,6 +16,37 @@ import { CreateOrderItemDto } from "./create-order-item.dto";
 import { OrderPriority } from "../../../domain/enums/order-priority.enum";
 
 export class CreateOrderDto {
+  @ApiProperty({
+    example: "uuid-of-company",
+    description: "Empresa que realiza el pedido",
+  })
+  @IsUUID()
+  companyId: string;
+
+  @ApiProperty({
+    example: "uuid-of-company-address",
+    description: "Direccion de entrega (debe pertenecer a la empresa)",
+  })
+  @IsUUID()
+  deliveryAddressId: string;
+
+  @ApiPropertyOptional({
+    example: "uuid-of-branch",
+    description: "Sede que realiza el pedido (debe pertenecer a la empresa)",
+  })
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
+
+  @ApiPropertyOptional({
+    example: "uuid-of-department",
+    description:
+      "Departamento que realiza el pedido (debe pertenecer a la empresa)",
+  })
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string;
+
   @ApiPropertyOptional({
     example: "VERANO2026",
     description: "Codigo del cupon a aplicar",
@@ -23,14 +54,6 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   couponCode?: string;
-
-  @ApiPropertyOptional({
-    example: "uuid-of-company-address",
-    description: "Direccion de entrega (sede de la empresa)",
-  })
-  @IsOptional()
-  @IsUUID()
-  deliveryAddressId?: string;
 
   @ApiPropertyOptional({
     example: "2026-05-12",

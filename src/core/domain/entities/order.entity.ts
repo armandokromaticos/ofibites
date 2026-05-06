@@ -45,11 +45,11 @@ interface OrderProps {
   id: string | undefined;
   userId: string | null;
   couponId: string | null;
-  companyId: string | null;
+  companyId: string;
   branchId: string | null;
   departmentId: string | null;
-  createdById: string | null;
-  deliveryAddressId: string | null;
+  createdById: string;
+  deliveryAddressId: string;
   deliveryDate: Date | null;
   deliveryTime: string | null;
   notes: string | null;
@@ -80,12 +80,12 @@ export interface CreateOrderItemParams {
 
 export interface CreateOrderParams {
   userId: string;
+  companyId: string;
+  createdById: string;
+  deliveryAddressId: string;
   couponId?: string;
-  companyId?: string;
   branchId?: string;
   departmentId?: string;
-  createdById?: string;
-  deliveryAddressId?: string;
   deliveryDate?: Date;
   deliveryTime?: string;
   notes?: string;
@@ -113,7 +113,7 @@ export class OrderEntity {
   get couponId(): string | null {
     return this.props.couponId;
   }
-  get companyId(): string | null {
+  get companyId(): string {
     return this.props.companyId;
   }
   get branchId(): string | null {
@@ -122,10 +122,10 @@ export class OrderEntity {
   get departmentId(): string | null {
     return this.props.departmentId;
   }
-  get createdById(): string | null {
+  get createdById(): string {
     return this.props.createdById;
   }
-  get deliveryAddressId(): string | null {
+  get deliveryAddressId(): string {
     return this.props.deliveryAddressId;
   }
   get deliveryDate(): Date | null {
@@ -194,11 +194,11 @@ export class OrderEntity {
       id: undefined,
       userId: params.userId,
       couponId: params.couponId ?? null,
-      companyId: params.companyId ?? null,
+      companyId: params.companyId,
       branchId: params.branchId ?? null,
       departmentId: params.departmentId ?? null,
-      createdById: params.createdById ?? params.userId,
-      deliveryAddressId: params.deliveryAddressId ?? null,
+      createdById: params.createdById,
+      deliveryAddressId: params.deliveryAddressId,
       deliveryDate: params.deliveryDate ?? null,
       deliveryTime: params.deliveryTime ?? null,
       notes: params.notes ?? null,
@@ -235,6 +235,16 @@ export class OrderEntity {
       deliveryDate: this.props.deliveryDate,
       deliveryTime: this.props.deliveryTime,
       notes: this.props.notes,
+      company: { connect: { id: this.props.companyId } },
+      createdBy: { connect: { id: this.props.createdById } },
+      deliveryAddress: {
+        connect: {
+          companyId_id: {
+            companyId: this.props.companyId,
+            id: this.props.deliveryAddressId,
+          },
+        },
+      },
       items: {
         create: (this.props.items ?? []).map((item) => ({
           product: { connect: { id: item.productId } },
@@ -261,41 +271,25 @@ export class OrderEntity {
     if (this.props.couponId) {
       data.coupon = { connect: { id: this.props.couponId } };
     }
-    if (this.props.companyId) {
-      data.company = { connect: { id: this.props.companyId } };
-      if (this.props.branchId) {
-        data.branch = {
-          connect: {
-            companyId_id: {
-              companyId: this.props.companyId,
-              id: this.props.branchId,
-            },
+    if (this.props.branchId) {
+      data.branch = {
+        connect: {
+          companyId_id: {
+            companyId: this.props.companyId,
+            id: this.props.branchId,
           },
-        };
-      }
-      if (this.props.departmentId) {
-        data.department = {
-          connect: {
-            companyId_id: {
-              companyId: this.props.companyId,
-              id: this.props.departmentId,
-            },
-          },
-        };
-      }
-      if (this.props.deliveryAddressId) {
-        data.deliveryAddress = {
-          connect: {
-            companyId_id: {
-              companyId: this.props.companyId,
-              id: this.props.deliveryAddressId,
-            },
-          },
-        };
-      }
+        },
+      };
     }
-    if (this.props.createdById) {
-      data.createdBy = { connect: { id: this.props.createdById } };
+    if (this.props.departmentId) {
+      data.department = {
+        connect: {
+          companyId_id: {
+            companyId: this.props.companyId,
+            id: this.props.departmentId,
+          },
+        },
+      };
     }
 
     return data;
@@ -306,11 +300,11 @@ export class OrderEntity {
       id: prisma.id,
       userId: prisma.userId ?? null,
       couponId: prisma.couponId ?? null,
-      companyId: prisma.companyId ?? null,
+      companyId: prisma.companyId,
       branchId: prisma.branchId ?? null,
       departmentId: prisma.departmentId ?? null,
-      createdById: prisma.createdById ?? null,
-      deliveryAddressId: prisma.deliveryAddressId ?? null,
+      createdById: prisma.createdById,
+      deliveryAddressId: prisma.deliveryAddressId,
       deliveryDate: prisma.deliveryDate ?? null,
       deliveryTime: prisma.deliveryTime ?? null,
       notes: prisma.notes ?? null,

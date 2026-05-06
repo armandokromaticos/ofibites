@@ -60,8 +60,8 @@ export class OrderResponseDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   couponId: string | null;
 
-  @ApiPropertyOptional({ nullable: true, type: String })
-  companyId: string | null;
+  @ApiProperty()
+  companyId: string;
 
   @ApiPropertyOptional({ nullable: true, type: String })
   branchId: string | null;
@@ -69,11 +69,11 @@ export class OrderResponseDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   departmentId: string | null;
 
-  @ApiPropertyOptional({ nullable: true, type: String })
-  createdById: string | null;
+  @ApiProperty()
+  createdById: string;
 
-  @ApiPropertyOptional({ nullable: true, type: String })
-  deliveryAddressId: string | null;
+  @ApiProperty()
+  deliveryAddressId: string;
 
   @ApiPropertyOptional({ nullable: true, type: Date })
   deliveryDate: Date | null;
