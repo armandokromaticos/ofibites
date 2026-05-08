@@ -9,6 +9,7 @@ import {
   Max,
   MaxLength,
   Min,
+  ValidateIf,
 } from "class-validator";
 
 export class UpdateCompanyDto {
@@ -44,7 +45,7 @@ export class UpdateCompanyDto {
     minimum: 0,
     maximum: 180,
   })
-  @IsOptional()
+  @ValidateIf((dto: UpdateCompanyDto) => dto.creditDays !== undefined)
   @IsInt()
   @Min(0)
   @Max(180)
