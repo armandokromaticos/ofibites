@@ -2,13 +2,14 @@ import { ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsBoolean,
   IsEmail,
-  IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
 } from "class-validator";
-import { PaymentTerm } from "../../../domain/enums/payment-term.enum";
 
 export class UpdateCompanyDto {
   @ApiPropertyOptional({ example: "Ofibites C.A." })
@@ -36,10 +37,18 @@ export class UpdateCompanyDto {
   @MaxLength(50)
   phone?: string | null;
 
-  @ApiPropertyOptional({ enum: PaymentTerm })
+  @ApiPropertyOptional({
+    example: 30,
+    description:
+      "Plazo de crédito en días (0 = contado). Cliente nuevo arranca en 0–5 y sube según historial.",
+    minimum: 0,
+    maximum: 180,
+  })
   @IsOptional()
-  @IsEnum(PaymentTerm)
-  paymentTerm?: PaymentTerm;
+  @IsInt()
+  @Min(0)
+  @Max(180)
+  creditDays?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

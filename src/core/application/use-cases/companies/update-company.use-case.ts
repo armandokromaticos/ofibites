@@ -39,7 +39,7 @@ export class UpdateCompanyUseCase {
     if (dto.phone !== undefined) {
       data.phone = dto.phone ? dto.phone.trim() : dto.phone;
     }
-    if (dto.paymentTerm !== undefined) data.paymentTerm = dto.paymentTerm;
+    if (dto.creditDays !== undefined) data.creditDays = dto.creditDays;
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
     try {

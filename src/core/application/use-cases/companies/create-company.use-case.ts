@@ -19,7 +19,7 @@ export class CreateCompanyUseCase {
       taxId: dto.taxId,
       email: dto.email ?? null,
       phone: dto.phone ?? null,
-      paymentTerm: dto.paymentTerm,
+      creditDays: dto.creditDays,
       isActive: dto.isActive,
     });
 

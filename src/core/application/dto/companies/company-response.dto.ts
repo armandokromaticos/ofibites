@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { PaymentTerm } from "../../../domain/enums/payment-term.enum";
 import { CompanyEntity } from "../../../domain/entities/company.entity";
 
 export class CompanyResponseDto {
@@ -18,8 +17,12 @@ export class CompanyResponseDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   phone: string | null;
 
-  @ApiProperty({ enum: PaymentTerm })
-  paymentTerm: PaymentTerm;
+  @ApiProperty({
+    example: 30,
+    description:
+      "Plazo de crédito en días (0 = contado, hasta 180). Histórico del cliente, no atado a cada pedido.",
+  })
+  creditDays: number;
 
   @ApiProperty()
   isActive: boolean;
@@ -37,7 +40,7 @@ export class CompanyResponseDto {
     dto.taxId = entity.taxId;
     dto.email = entity.email;
     dto.phone = entity.phone;
-    dto.paymentTerm = entity.paymentTerm;
+    dto.creditDays = entity.creditDays;
     dto.isActive = entity.isActive;
     dto.createdAt = entity.createdAt;
     dto.updatedAt = entity.updatedAt;
