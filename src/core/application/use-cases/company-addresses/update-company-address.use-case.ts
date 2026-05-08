@@ -39,33 +39,35 @@ export class UpdateCompanyAddressUseCase {
     const data: Prisma.CompanyAddressUpdateInput = {};
     if (dto.label !== undefined) data.label = dto.label.trim();
     if (dto.line1 !== undefined) data.line1 = dto.line1.trim();
-    if (dto.line2 !== undefined) data.line2 = dto.line2;
-    if (dto.reference !== undefined) data.reference = dto.reference;
+    if (dto.line2 !== undefined) data.line2 = dto.line2?.trim() ?? null;
+    if (dto.reference !== undefined) {
+      data.reference = dto.reference?.trim() ?? null;
+    }
     if (dto.city !== undefined) data.city = dto.city.trim();
-    if (dto.state !== undefined) data.state = dto.state;
+    if (dto.state !== undefined) data.state = dto.state?.trim() ?? null;
     if (dto.country !== undefined) data.country = dto.country.trim();
-    if (dto.zip !== undefined) data.zip = dto.zip;
+    if (dto.zip !== undefined) data.zip = dto.zip?.trim() ?? null;
     if (dto.isShipping !== undefined) data.isShipping = dto.isShipping;
-    // isBilling se maneja después con setSingleBilling para cumplir invariante
+    if (dto.isBilling === false) data.isBilling = false;
+    // isBilling=true se aplica después con setSingleBilling para cumplir invariante
 
-    const updated = await this.addressRepository.update({
-      where: { id },
-      data,
-    });
+    let updated: CompanyAddressEntity;
+    try {
+      updated = await this.addressRepository.update({ where: { id }, data });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(
+          `Address ${id} not found in company ${companyId}`,
+        );
+      }
+      throw error;
+    }
 
     if (dto.isBilling === true) {
       await this.addressRepository.setSingleBilling(companyId, id);
-      const refreshed = await this.addressRepository.findUnique({
-        where: { id },
-      });
-      return refreshed ?? updated;
-    }
-
-    if (dto.isBilling === false) {
-      await this.addressRepository.update({
-        where: { id },
-        data: { isBilling: false },
-      });
       const refreshed = await this.addressRepository.findUnique({
         where: { id },
       });

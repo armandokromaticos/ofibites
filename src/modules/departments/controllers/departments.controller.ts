@@ -15,6 +15,7 @@ import { Role } from "../../../core/domain/enums/role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateDepartmentDto } from "../../../core/application/dto/departments/create-department.dto";
 import { UpdateDepartmentDto } from "../../../core/application/dto/departments/update-department.dto";
 import { DepartmentResponseDto } from "../../../core/application/dto/departments/department-response.dto";
@@ -56,8 +57,13 @@ export class DepartmentsController {
   @ApiOperation({ summary: "Listar departamentos de la empresa" })
   async findAll(
     @Param("companyId", ParseUUIDPipe) companyId: string,
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<DepartmentResponseDto[]> {
-    const departments = await this.getDepartmentsUseCase.execute(companyId);
+    const departments = await this.getDepartmentsUseCase.execute(
+      companyId,
+      user.id,
+      user.role,
+    );
     return departments.map((d) => DepartmentResponseDto.fromEntity(d));
   }
 
@@ -67,8 +73,14 @@ export class DepartmentsController {
   async findOne(
     @Param("companyId", ParseUUIDPipe) companyId: string,
     @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<DepartmentResponseDto> {
-    const department = await this.getDepartmentUseCase.execute(companyId, id);
+    const department = await this.getDepartmentUseCase.execute(
+      companyId,
+      id,
+      user.id,
+      user.role,
+    );
     return DepartmentResponseDto.fromEntity(department);
   }
 

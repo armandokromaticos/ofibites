@@ -11,15 +11,13 @@ export interface ICompanyAddressRepository {
   findMany(
     args?: Prisma.CompanyAddressFindManyArgs,
   ): Promise<{ data: CompanyAddressEntity[]; total?: number }>;
-  update(
-    args: Prisma.CompanyAddressUpdateArgs,
-  ): Promise<CompanyAddressEntity>;
+  update(args: Prisma.CompanyAddressUpdateArgs): Promise<CompanyAddressEntity>;
   delete(id: string): Promise<void>;
   exists(args: Prisma.CompanyAddressCountArgs): Promise<boolean>;
 
-  // Helper de dominio: marcar otra dirección como única de billing en una transacción
-  setSingleBilling(
-    companyId: string,
-    targetId: string,
-  ): Promise<void>;
+  // Helpers de dominio: garantizan el invariante "una sola dirección de billing por empresa"
+  setSingleBilling(companyId: string, targetId: string): Promise<void>;
+  createAndSetSingleBilling(
+    entity: CompanyAddressEntity,
+  ): Promise<CompanyAddressEntity>;
 }

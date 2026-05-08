@@ -15,6 +15,7 @@ import { Role } from "../../../core/domain/enums/role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateCompanyAddressDto } from "../../../core/application/dto/company-addresses/create-company-address.dto";
 import { UpdateCompanyAddressDto } from "../../../core/application/dto/company-addresses/update-company-address.dto";
 import { CompanyAddressResponseDto } from "../../../core/application/dto/company-addresses/company-address-response.dto";
@@ -53,8 +54,13 @@ export class CompanyAddressesController {
   @ApiOperation({ summary: "Listar direcciones de la empresa" })
   async findAll(
     @Param("companyId", ParseUUIDPipe) companyId: string,
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<CompanyAddressResponseDto[]> {
-    const addresses = await this.getAllUseCase.execute(companyId);
+    const addresses = await this.getAllUseCase.execute(
+      companyId,
+      user.id,
+      user.role,
+    );
     return addresses.map((a) => CompanyAddressResponseDto.fromEntity(a));
   }
 
@@ -64,8 +70,14 @@ export class CompanyAddressesController {
   async findOne(
     @Param("companyId", ParseUUIDPipe) companyId: string,
     @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<CompanyAddressResponseDto> {
-    const address = await this.getUseCase.execute(companyId, id);
+    const address = await this.getUseCase.execute(
+      companyId,
+      id,
+      user.id,
+      user.role,
+    );
     return CompanyAddressResponseDto.fromEntity(address);
   }
 

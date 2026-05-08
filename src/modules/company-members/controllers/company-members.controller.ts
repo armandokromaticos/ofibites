@@ -15,6 +15,7 @@ import { Role } from "../../../core/domain/enums/role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateCompanyMemberDto } from "../../../core/application/dto/company-members/create-company-member.dto";
 import { UpdateCompanyMemberDto } from "../../../core/application/dto/company-members/update-company-member.dto";
 import { CompanyMemberResponseDto } from "../../../core/application/dto/company-members/company-member-response.dto";
@@ -53,8 +54,13 @@ export class CompanyMembersController {
   @ApiOperation({ summary: "Listar miembros de la empresa" })
   async findAll(
     @Param("companyId", ParseUUIDPipe) companyId: string,
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<CompanyMemberResponseDto[]> {
-    const members = await this.getAllUseCase.execute(companyId);
+    const members = await this.getAllUseCase.execute(
+      companyId,
+      user.id,
+      user.role,
+    );
     return members.map((m) => CompanyMemberResponseDto.fromEntity(m));
   }
 
@@ -64,8 +70,14 @@ export class CompanyMembersController {
   async findOne(
     @Param("companyId", ParseUUIDPipe) companyId: string,
     @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<CompanyMemberResponseDto> {
-    const member = await this.getUseCase.execute(companyId, id);
+    const member = await this.getUseCase.execute(
+      companyId,
+      id,
+      user.id,
+      user.role,
+    );
     return CompanyMemberResponseDto.fromEntity(member);
   }
 

@@ -1,13 +1,10 @@
-import {
-  ConflictException,
-  Inject,
-  Injectable,
-} from "@nestjs/common";
+import { ConflictException, Inject, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import type { ICompanyRepository } from "../../../domain/repositories/company.repository.interface";
 import { COMPANY_REPOSITORY } from "../../../domain/repositories/company.repository.interface";
 import { CreateCompanyDto } from "../../dto/companies/create-company.dto";
 import { CompanyEntity } from "../../../domain/entities/company.entity";
+import { describeUniqueTarget } from "../../shared/prisma-error.util";
 
 @Injectable()
 export class CreateCompanyUseCase {
@@ -34,7 +31,7 @@ export class CreateCompanyUseCase {
         error.code === "P2002"
       ) {
         throw new ConflictException(
-          `Ya existe una empresa con taxId "${dto.taxId}"`,
+          `Ya existe una empresa con el mismo ${describeUniqueTarget(error)}`,
         );
       }
       throw error;

@@ -30,9 +30,7 @@ export interface ICompanyMemberRepository {
   findMany(
     args?: Prisma.CompanyMemberFindManyArgs,
   ): Promise<{ data: CompanyMemberEntity[]; total?: number }>;
-  update(
-    args: Prisma.CompanyMemberUpdateArgs,
-  ): Promise<CompanyMemberEntity>;
+  update(args: Prisma.CompanyMemberUpdateArgs): Promise<CompanyMemberEntity>;
   delete(id: string): Promise<void>;
   exists(args: Prisma.CompanyMemberCountArgs): Promise<boolean>;
 

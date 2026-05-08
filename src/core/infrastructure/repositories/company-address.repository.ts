@@ -55,19 +55,35 @@ export class CompanyAddressRepository implements ICompanyAddressRepository {
     return count > 0;
   }
 
-  async setSingleBilling(
-    companyId: string,
-    targetId: string,
-  ): Promise<void> {
+  async setSingleBilling(companyId: string, targetId: string): Promise<void> {
     await this.prisma.$transaction([
       this.prisma.companyAddress.updateMany({
         where: { companyId, isBilling: true, NOT: { id: targetId } },
         data: { isBilling: false },
       }),
       this.prisma.companyAddress.update({
-        where: { id: targetId },
+        where: { companyId_id: { companyId, id: targetId } },
         data: { isBilling: true },
       }),
     ]);
+  }
+
+  async createAndSetSingleBilling(
+    entity: CompanyAddressEntity,
+  ): Promise<CompanyAddressEntity> {
+    const data = entity.toPrismaCreate();
+    const created = await this.prisma.$transaction(async (tx) => {
+      const row = await tx.companyAddress.create({ data });
+      await tx.companyAddress.updateMany({
+        where: {
+          companyId: entity.companyId,
+          isBilling: true,
+          NOT: { id: row.id },
+        },
+        data: { isBilling: false },
+      });
+      return row;
+    });
+    return CompanyAddressEntity.fromPrisma(created);
   }
 }

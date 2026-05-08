@@ -285,9 +285,7 @@ export class CreateOrderUseCase {
         where: { id: dto.departmentId },
       });
       if (!department) {
-        throw new NotFoundException(
-          `Department ${dto.departmentId} not found`,
-        );
+        throw new NotFoundException(`Department ${dto.departmentId} not found`);
       }
       if (department.companyId !== dto.companyId) {
         throw new BadRequestException(

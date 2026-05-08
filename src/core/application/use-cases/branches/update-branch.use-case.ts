@@ -38,6 +38,18 @@ export class UpdateBranchUseCase {
     if (dto.name !== undefined) data.name = dto.name.trim();
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
-    return this.branchRepository.update({ where: { id }, data });
+    try {
+      return await this.branchRepository.update({ where: { id }, data });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(
+          `Branch ${id} not found in company ${companyId}`,
+        );
+      }
+      throw error;
+    }
   }
 }

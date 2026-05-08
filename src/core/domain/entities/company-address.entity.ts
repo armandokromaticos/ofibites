@@ -1,7 +1,10 @@
-import {
-  CompanyAddress as PrismaCompanyAddress,
-  Prisma,
-} from "@prisma/client";
+import { CompanyAddress as PrismaCompanyAddress, Prisma } from "@prisma/client";
+
+function trimOrNull(value: string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? null : trimmed;
+}
 
 export interface CreateCompanyAddressParams {
   companyId: string;
@@ -60,12 +63,12 @@ export class CompanyAddressEntity {
     entity.companyId = params.companyId;
     entity.label = params.label.trim();
     entity.line1 = params.line1.trim();
-    entity.line2 = params.line2 ?? null;
-    entity.reference = params.reference ?? null;
+    entity.line2 = trimOrNull(params.line2);
+    entity.reference = trimOrNull(params.reference);
     entity.city = params.city.trim();
-    entity.state = params.state ?? null;
+    entity.state = trimOrNull(params.state);
     entity.country = params.country.trim();
-    entity.zip = params.zip ?? null;
+    entity.zip = trimOrNull(params.zip);
     entity.isBilling = params.isBilling ?? false;
     entity.isShipping = params.isShipping ?? true;
     entity.createdAt = new Date();

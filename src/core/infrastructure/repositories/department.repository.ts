@@ -37,9 +37,7 @@ export class DepartmentRepository implements IDepartmentRepository {
     return { data };
   }
 
-  async update(
-    args: Prisma.DepartmentUpdateArgs,
-  ): Promise<DepartmentEntity> {
+  async update(args: Prisma.DepartmentUpdateArgs): Promise<DepartmentEntity> {
     const department = await this.prisma.department.update(args);
     return DepartmentEntity.fromPrisma(department);
   }

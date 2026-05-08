@@ -62,9 +62,7 @@ export class AuthController {
     description:
       "Devuelve el perfil del usuario y la lista de empresas a las que pertenece (memberships) con su rol funcional, sede, departamento y permisos por empresa.",
   })
-  async me(
-    @CurrentUser() user: { authId: string },
-  ): Promise<MeResponseDto> {
+  async me(@CurrentUser() user: { authId: string }): Promise<MeResponseDto> {
     return this.getMeUseCase.execute(user.authId);
   }
 }

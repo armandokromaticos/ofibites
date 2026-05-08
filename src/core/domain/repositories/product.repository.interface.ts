@@ -20,9 +20,7 @@ export const PRODUCT_FULL_INCLUDE = {
 
 export interface IProductRepository {
   create(entity: ProductEntity): Promise<ProductEntity>;
-  findUnique(
-    args: Prisma.ProductFindUniqueArgs,
-  ): Promise<ProductEntity | null>;
+  findUnique(args: Prisma.ProductFindUniqueArgs): Promise<ProductEntity | null>;
   findMany(
     args?: Prisma.ProductFindManyArgs,
   ): Promise<{ data: ProductEntity[]; total?: number }>;

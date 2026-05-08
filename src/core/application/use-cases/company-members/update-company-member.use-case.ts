@@ -42,7 +42,14 @@ export class UpdateCompanyMemberUseCase {
       );
     }
 
-    if (dto.branchId) {
+    // Solo validamos cuando viene un id no-null (string vacío sería un input inválido,
+    // no una intención de desconectar — eso se expresa con null explícito).
+    if (dto.branchId !== undefined && dto.branchId !== null) {
+      if (dto.branchId.length === 0) {
+        throw new BadRequestException(
+          "branchId no puede ser una cadena vacía; usa null para desconectar",
+        );
+      }
       const branch = await this.branchRepository.findUnique({
         where: { id: dto.branchId },
       });
@@ -53,7 +60,12 @@ export class UpdateCompanyMemberUseCase {
       }
     }
 
-    if (dto.departmentId) {
+    if (dto.departmentId !== undefined && dto.departmentId !== null) {
+      if (dto.departmentId.length === 0) {
+        throw new BadRequestException(
+          "departmentId no puede ser una cadena vacía; usa null para desconectar",
+        );
+      }
       const department = await this.departmentRepository.findUnique({
         where: { id: dto.departmentId },
       });
@@ -72,24 +84,38 @@ export class UpdateCompanyMemberUseCase {
     }
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
     if (dto.branchId !== undefined) {
-      data.branch = dto.branchId
-        ? {
-            connect: {
-              companyId_id: { companyId, id: dto.branchId },
-            },
-          }
-        : { disconnect: true };
+      data.branch =
+        dto.branchId === null
+          ? { disconnect: true }
+          : {
+              connect: {
+                companyId_id: { companyId, id: dto.branchId },
+              },
+            };
     }
     if (dto.departmentId !== undefined) {
-      data.department = dto.departmentId
-        ? {
-            connect: {
-              companyId_id: { companyId, id: dto.departmentId },
-            },
-          }
-        : { disconnect: true };
+      data.department =
+        dto.departmentId === null
+          ? { disconnect: true }
+          : {
+              connect: {
+                companyId_id: { companyId, id: dto.departmentId },
+              },
+            };
     }
 
-    return this.memberRepository.update({ where: { id }, data });
+    try {
+      return await this.memberRepository.update({ where: { id }, data });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException(
+          `Member ${id} not found in company ${companyId}`,
+        );
+      }
+      throw error;
+    }
   }
 }

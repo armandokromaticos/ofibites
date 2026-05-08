@@ -92,9 +92,7 @@ export class CreateCompanyMemberUseCase {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
       ) {
-        throw new ConflictException(
-          `El usuario ya es miembro de esta empresa`,
-        );
+        throw new ConflictException(`El usuario ya es miembro de esta empresa`);
       }
       throw error;
     }

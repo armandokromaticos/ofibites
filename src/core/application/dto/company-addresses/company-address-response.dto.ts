@@ -44,9 +44,7 @@ export class CompanyAddressResponseDto {
   @ApiProperty()
   updatedAt: Date;
 
-  static fromEntity(
-    entity: CompanyAddressEntity,
-  ): CompanyAddressResponseDto {
+  static fromEntity(entity: CompanyAddressEntity): CompanyAddressResponseDto {
     const dto = new CompanyAddressResponseDto();
     dto.id = entity.id;
     dto.companyId = entity.companyId;

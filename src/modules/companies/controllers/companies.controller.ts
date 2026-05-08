@@ -41,9 +41,7 @@ export class CompaniesController {
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
   @ApiOperation({ summary: "Crear empresa" })
-  async create(
-    @Body() dto: CreateCompanyDto,
-  ): Promise<CompanyResponseDto> {
+  async create(@Body() dto: CreateCompanyDto): Promise<CompanyResponseDto> {
     const company = await this.createCompanyUseCase.execute(dto);
     return CompanyResponseDto.fromEntity(company);
   }

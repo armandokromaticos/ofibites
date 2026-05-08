@@ -26,13 +26,17 @@ export class DeleteBranchUseCase {
     try {
       await this.branchRepository.delete(id);
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2003"
-      ) {
-        throw new ConflictException(
-          "No se puede eliminar la sede porque tiene órdenes o miembros asociados",
-        );
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2003") {
+          throw new ConflictException(
+            "No se puede eliminar la sede porque tiene órdenes o miembros asociados",
+          );
+        }
+        if (error.code === "P2025") {
+          throw new NotFoundException(
+            `Branch ${id} not found in company ${companyId}`,
+          );
+        }
       }
       throw error;
     }

@@ -8,7 +8,7 @@ export class OrderItemModifierResponseDto {
   @ApiProperty()
   modifierId: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     nullable: true,
     type: Number,
     description: "Oculto para roles sin acceso a precios",
@@ -32,14 +32,14 @@ export class OrderItemResponseDto {
   @ApiProperty()
   quantity: number;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     nullable: true,
     type: Number,
     description: "Oculto para roles sin acceso a precios",
   })
   unitPrice: number | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     nullable: true,
     type: Number,
     description: "Oculto para roles sin acceso a precios",
@@ -90,21 +90,21 @@ export class OrderResponseDto {
   @ApiProperty()
   status: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     nullable: true,
     type: Number,
     description: "Oculto para roles sin acceso a precios",
   })
   subtotal: number | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     nullable: true,
     type: Number,
     description: "Oculto para roles sin acceso a precios",
   })
   discount: number | null;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     nullable: true,
     type: Number,
     description: "Oculto para roles sin acceso a precios",

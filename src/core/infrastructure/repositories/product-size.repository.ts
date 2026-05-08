@@ -39,9 +39,7 @@ export class ProductSizeRepository implements IProductSizeRepository {
     return { data };
   }
 
-  async update(
-    args: Prisma.ProductSizeUpdateArgs,
-  ): Promise<ProductSizeEntity> {
+  async update(args: Prisma.ProductSizeUpdateArgs): Promise<ProductSizeEntity> {
     const size = await this.prisma.productSize.update(args);
     return ProductSizeEntity.fromPrisma(size);
   }

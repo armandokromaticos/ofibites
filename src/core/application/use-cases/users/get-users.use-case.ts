@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-} from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable } from "@nestjs/common";
 import type { IUserRepository } from "../../../domain/repositories/user.repository.interface";
 import { USER_REPOSITORY } from "../../../domain/repositories/user.repository.interface";
 import type { ICompanyMemberRepository } from "../../../domain/repositories/company-member.repository.interface";
@@ -78,9 +74,7 @@ export class GetUsersUseCase {
       return data;
     }
 
-    throw new ForbiddenException(
-      "No tienes permisos para listar usuarios",
-    );
+    throw new ForbiddenException("No tienes permisos para listar usuarios");
   }
 
   private async assertCompanyAccess(

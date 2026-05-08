@@ -24,13 +24,15 @@ export class DeleteCompanyUseCase {
     try {
       await this.companyRepository.delete(id);
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2003"
-      ) {
-        throw new ConflictException(
-          "No se puede eliminar la empresa porque tiene órdenes asociadas",
-        );
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2003") {
+          throw new ConflictException(
+            "No se puede eliminar la empresa porque tiene recursos asociados (órdenes, sedes, miembros, etc.)",
+          );
+        }
+        if (error.code === "P2025") {
+          throw new NotFoundException(`Company with id ${id} not found`);
+        }
       }
       throw error;
     }

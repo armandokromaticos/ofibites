@@ -57,8 +57,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.FINANCE_ADMIN, Role.KAM)
   @ApiOperation({
-    summary:
-      "Listar usuarios (filtrado por empresa para KAM y admins)",
+    summary: "Listar usuarios (filtrado por empresa para KAM y admins)",
   })
   @ApiQuery({
     name: "companyId",

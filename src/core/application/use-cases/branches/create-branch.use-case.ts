@@ -1,8 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { IBranchRepository } from "../../../domain/repositories/branch.repository.interface";
 import { BRANCH_REPOSITORY } from "../../../domain/repositories/branch.repository.interface";
 import type { ICompanyRepository } from "../../../domain/repositories/company.repository.interface";

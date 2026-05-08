@@ -59,18 +59,14 @@ export class GetOrderUseCase {
 
     if (userRole === Role.KAM) {
       if (!order.companyId) {
-        throw new ForbiddenException(
-          "No tienes acceso a esta orden",
-        );
+        throw new ForbiddenException("No tienes acceso a esta orden");
       }
       const isAssigned = await this.companyKamRepository.isAssignedToCompany(
         userId,
         order.companyId,
       );
       if (!isAssigned) {
-        throw new ForbiddenException(
-          "No tienes acceso a esta orden",
-        );
+        throw new ForbiddenException("No tienes acceso a esta orden");
       }
       return;
     }

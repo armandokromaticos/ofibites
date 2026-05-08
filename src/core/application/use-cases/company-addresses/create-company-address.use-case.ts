@@ -40,16 +40,10 @@ export class CreateCompanyAddressUseCase {
       isShipping: dto.isShipping,
     });
 
-    const created = await this.addressRepository.create(entity);
-
-    if (created.isBilling) {
-      await this.addressRepository.setSingleBilling(companyId, created.id);
-      const refreshed = await this.addressRepository.findUnique({
-        where: { id: created.id },
-      });
-      return refreshed ?? created;
+    if (entity.isBilling) {
+      return this.addressRepository.createAndSetSingleBilling(entity);
     }
 
-    return created;
+    return this.addressRepository.create(entity);
   }
 }

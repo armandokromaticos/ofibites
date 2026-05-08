@@ -1,7 +1,4 @@
-import {
-  CompanyMember as PrismaCompanyMember,
-  Prisma,
-} from "@prisma/client";
+import { CompanyMember as PrismaCompanyMember, Prisma } from "@prisma/client";
 import { CompanyRole } from "../enums/company-role.enum";
 
 export interface CreateCompanyMemberParams {

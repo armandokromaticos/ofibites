@@ -10,7 +10,13 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiHeader,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
+import { isUUID } from "class-validator";
 import { Role } from "../../../core/domain/enums/role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
@@ -24,9 +30,6 @@ import { GetOrderUseCase } from "../../../core/application/use-cases/orders/get-
 import { GetOrdersUseCase } from "../../../core/application/use-cases/orders/get-orders.use-case";
 import { CancelOrderUseCase } from "../../../core/application/use-cases/orders/cancel-order.use-case";
 import { UpdateOrderStatusUseCase } from "../../../core/application/use-cases/orders/update-order-status.use-case";
-
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @ApiTags("Orders")
 @Controller("orders")
@@ -142,7 +145,7 @@ export class OrdersController {
     if (!trimmed) {
       return undefined;
     }
-    if (!UUID_REGEX.test(trimmed)) {
+    if (!isUUID(trimmed, "4")) {
       throw new BadRequestException("X-Company-Id debe ser un UUID válido");
     }
     return trimmed;

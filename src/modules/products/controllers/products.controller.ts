@@ -482,5 +482,4 @@ export class ProductsController {
   ): Promise<void> {
     await this.removeTagFromProductUseCase.execute(id, tagId);
   }
-
 }

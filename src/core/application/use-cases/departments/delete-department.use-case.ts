@@ -28,13 +28,17 @@ export class DeleteDepartmentUseCase {
     try {
       await this.departmentRepository.delete(id);
     } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2003"
-      ) {
-        throw new ConflictException(
-          "No se puede eliminar el departamento porque tiene órdenes o miembros asociados",
-        );
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2003") {
+          throw new ConflictException(
+            "No se puede eliminar el departamento porque tiene órdenes o miembros asociados",
+          );
+        }
+        if (error.code === "P2025") {
+          throw new NotFoundException(
+            `Department ${id} not found in company ${companyId}`,
+          );
+        }
       }
       throw error;
     }

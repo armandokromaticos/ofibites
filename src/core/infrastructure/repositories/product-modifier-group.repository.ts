@@ -5,9 +5,7 @@ import { IProductModifierGroupRepository } from "../../domain/repositories/produ
 import { ProductModifierGroupEntity } from "../../domain/entities/product-modifier-group.entity";
 
 @Injectable()
-export class ProductModifierGroupRepository
-  implements IProductModifierGroupRepository
-{
+export class ProductModifierGroupRepository implements IProductModifierGroupRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(
@@ -30,9 +28,7 @@ export class ProductModifierGroupRepository
     args?: Prisma.ProductModifierGroupFindManyArgs,
   ): Promise<{ data: ProductModifierGroupEntity[]; total?: number }> {
     const rows = await this.prisma.productModifierGroup.findMany(args);
-    const data = rows.map((row) =>
-      ProductModifierGroupEntity.fromPrisma(row),
-    );
+    const data = rows.map((row) => ProductModifierGroupEntity.fromPrisma(row));
 
     const hasPagination =
       typeof args?.skip === "number" || typeof args?.take === "number";
@@ -56,9 +52,7 @@ export class ProductModifierGroupRepository
     await this.prisma.productModifierGroup.delete({ where: { id } });
   }
 
-  async exists(
-    args: Prisma.ProductModifierGroupCountArgs,
-  ): Promise<boolean> {
+  async exists(args: Prisma.ProductModifierGroupCountArgs): Promise<boolean> {
     const count = await this.prisma.productModifierGroup.count(args);
     return count > 0;
   }

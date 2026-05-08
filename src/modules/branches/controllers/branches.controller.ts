@@ -15,6 +15,7 @@ import { Role } from "../../../core/domain/enums/role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateBranchDto } from "../../../core/application/dto/branches/create-branch.dto";
 import { UpdateBranchDto } from "../../../core/application/dto/branches/update-branch.dto";
 import { BranchResponseDto } from "../../../core/application/dto/branches/branch-response.dto";
@@ -53,8 +54,13 @@ export class BranchesController {
   @ApiOperation({ summary: "Listar sedes de la empresa" })
   async findAll(
     @Param("companyId", ParseUUIDPipe) companyId: string,
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<BranchResponseDto[]> {
-    const branches = await this.getBranchesUseCase.execute(companyId);
+    const branches = await this.getBranchesUseCase.execute(
+      companyId,
+      user.id,
+      user.role,
+    );
     return branches.map((b) => BranchResponseDto.fromEntity(b));
   }
 
@@ -64,8 +70,14 @@ export class BranchesController {
   async findOne(
     @Param("companyId", ParseUUIDPipe) companyId: string,
     @Param("id", ParseUUIDPipe) id: string,
+    @CurrentUser() user: { id: string; role: Role },
   ): Promise<BranchResponseDto> {
-    const branch = await this.getBranchUseCase.execute(companyId, id);
+    const branch = await this.getBranchUseCase.execute(
+      companyId,
+      id,
+      user.id,
+      user.role,
+    );
     return BranchResponseDto.fromEntity(branch);
   }
 
