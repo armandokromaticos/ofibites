@@ -57,10 +57,13 @@ export class GetUsersUseCase {
       if (companyIds.length === 0) {
         return [];
       }
+      const memberLists = await Promise.all(
+        companyIds.map((companyId) =>
+          this.companyMemberRepository.findActiveByCompanyId(companyId),
+        ),
+      );
       const userIds = new Set<string>();
-      for (const companyId of companyIds) {
-        const members =
-          await this.companyMemberRepository.findActiveByCompanyId(companyId);
+      for (const members of memberLists) {
         for (const member of members) {
           userIds.add(member.userId);
         }

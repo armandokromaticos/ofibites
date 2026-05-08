@@ -39,14 +39,24 @@ export class UpdateCompanyAddressUseCase {
     const data: Prisma.CompanyAddressUpdateInput = {};
     if (dto.label !== undefined) data.label = dto.label.trim();
     if (dto.line1 !== undefined) data.line1 = dto.line1.trim();
-    if (dto.line2 !== undefined) data.line2 = dto.line2?.trim() ?? null;
+    if (dto.line2 !== undefined) {
+      const trimmed = dto.line2?.trim();
+      data.line2 = trimmed ? trimmed : null;
+    }
     if (dto.reference !== undefined) {
-      data.reference = dto.reference?.trim() ?? null;
+      const trimmed = dto.reference?.trim();
+      data.reference = trimmed ? trimmed : null;
     }
     if (dto.city !== undefined) data.city = dto.city.trim();
-    if (dto.state !== undefined) data.state = dto.state?.trim() ?? null;
+    if (dto.state !== undefined) {
+      const trimmed = dto.state?.trim();
+      data.state = trimmed ? trimmed : null;
+    }
     if (dto.country !== undefined) data.country = dto.country.trim();
-    if (dto.zip !== undefined) data.zip = dto.zip?.trim() ?? null;
+    if (dto.zip !== undefined) {
+      const trimmed = dto.zip?.trim();
+      data.zip = trimmed ? trimmed : null;
+    }
     if (dto.isShipping !== undefined) data.isShipping = dto.isShipping;
     if (dto.isBilling === false) data.isBilling = false;
     // isBilling=true se aplica después con setSingleBilling para cumplir invariante

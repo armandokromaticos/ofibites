@@ -35,7 +35,13 @@ export class UpdateBranchUseCase {
     }
 
     const data: Prisma.BranchUpdateInput = {};
-    if (dto.name !== undefined) data.name = dto.name.trim();
+    if (dto.name !== undefined) {
+      const trimmed = dto.name.trim();
+      if (trimmed === "") {
+        throw new BadRequestException("name must not be empty");
+      }
+      data.name = trimmed;
+    }
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
     try {
