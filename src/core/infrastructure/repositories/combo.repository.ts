@@ -1,63 +1,58 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma/prisma.service";
-import { IComboRepository } from "../../domain/repositories/combo.repository.interface";
+import {
+  COMBO_FULL_INCLUDE,
+  IComboRepository,
+} from "../../domain/repositories/combo.repository.interface";
 import { ComboEntity } from "../../domain/entities/combo.entity";
 
 @Injectable()
 export class ComboRepository implements IComboRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private static readonly COMBO_INCLUDE = {
-    items: {
-      include: { product: true },
-      orderBy: { sortOrder: "asc" as const },
-    },
-  };
-
   async create(entity: ComboEntity): Promise<ComboEntity> {
-    const data = entity.toPrismaCreate();
     const combo = await this.prisma.combo.create({
-      data: data as Prisma.ComboCreateInput,
-      include: ComboRepository.COMBO_INCLUDE,
+      data: entity.toPrismaCreate(),
+      include: COMBO_FULL_INCLUDE,
     });
     return ComboEntity.fromPrisma(combo);
   }
 
-  async findById(id: string): Promise<ComboEntity | null> {
-    const combo = await this.prisma.combo.findUnique({
-      where: { id },
-      include: ComboRepository.COMBO_INCLUDE,
-    });
+  async findUnique(
+    args: Prisma.ComboFindUniqueArgs,
+  ): Promise<ComboEntity | null> {
+    const combo = await this.prisma.combo.findUnique(args);
     return combo ? ComboEntity.fromPrisma(combo) : null;
   }
 
-  async findAll(): Promise<ComboEntity[]> {
-    const combos = await this.prisma.combo.findMany({
-      include: ComboRepository.COMBO_INCLUDE,
-    });
-    return combos.map((combo) => ComboEntity.fromPrisma(combo));
+  async findMany(
+    args?: Prisma.ComboFindManyArgs,
+  ): Promise<{ data: ComboEntity[]; total?: number }> {
+    const rows = await this.prisma.combo.findMany(args);
+    const data = rows.map((row) => ComboEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+    if (hasPagination) {
+      const total = await this.prisma.combo.count({ where: args?.where });
+      return { data, total };
+    }
+    return { data };
   }
 
-  async update(id: string, entity: Partial<ComboEntity>): Promise<ComboEntity> {
-    const data: Record<string, unknown> = {};
-    if (entity.nameEs !== undefined) data.nameEs = entity.nameEs;
-    if (entity.nameEn !== undefined) data.nameEn = entity.nameEn;
-    if (entity.descriptionEs !== undefined)
-      data.descriptionEs = entity.descriptionEs;
-    if (entity.descriptionEn !== undefined)
-      data.descriptionEn = entity.descriptionEn;
-    if (entity.price !== undefined)
-      data.price = new Prisma.Decimal(entity.price);
-    if (entity.image !== undefined) data.image = entity.image;
-    if (entity.isActive !== undefined) data.isActive = entity.isActive;
-
-    const combo = await this.prisma.combo.update({
-      where: { id },
-      data: data as Prisma.ComboUpdateInput,
-      include: ComboRepository.COMBO_INCLUDE,
-    });
+  async update(args: Prisma.ComboUpdateArgs): Promise<ComboEntity> {
+    const combo = await this.prisma.combo.update(args);
     return ComboEntity.fromPrisma(combo);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.combo.delete({ where: { id } });
+  }
+
+  async exists(args: Prisma.ComboCountArgs): Promise<boolean> {
+    const count = await this.prisma.combo.count(args);
+    return count > 0;
   }
 
   async addItem(
@@ -69,13 +64,16 @@ export class ComboRepository implements IComboRepository {
     await this.prisma.comboItem.create({
       data: { comboId, productId, quantity, sortOrder },
     });
-    const combo = await this.findById(comboId);
+    const combo = await this.prisma.combo.findUnique({
+      where: { id: comboId },
+      include: COMBO_FULL_INCLUDE,
+    });
     if (!combo) {
       throw new NotFoundException(
         `Combo with id ${comboId} not found after addItem`,
       );
     }
-    return combo;
+    return ComboEntity.fromPrisma(combo);
   }
 
   async removeItem(comboId: string, itemId: string): Promise<ComboEntity> {
@@ -87,12 +85,15 @@ export class ComboRepository implements IComboRepository {
         `Item with id ${itemId} not found in combo ${comboId}`,
       );
     }
-    const combo = await this.findById(comboId);
+    const combo = await this.prisma.combo.findUnique({
+      where: { id: comboId },
+      include: COMBO_FULL_INCLUDE,
+    });
     if (!combo) {
       throw new NotFoundException(
         `Combo with id ${comboId} not found after removeItem`,
       );
     }
-    return combo;
+    return ComboEntity.fromPrisma(combo);
   }
 }

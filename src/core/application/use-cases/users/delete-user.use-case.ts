@@ -20,7 +20,7 @@ export class DeleteUserUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    const existing = await this.userRepository.findById(id);
+    const existing = await this.userRepository.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`User with id "${id}" not found`);
     }

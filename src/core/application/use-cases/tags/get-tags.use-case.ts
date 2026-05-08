@@ -11,6 +11,9 @@ export class GetTagsUseCase {
   ) {}
 
   async execute(): Promise<TagEntity[]> {
-    return this.tagRepository.findAll();
+    const { data } = await this.tagRepository.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return data;
   }
 }

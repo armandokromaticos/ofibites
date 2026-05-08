@@ -4,13 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import type { IMoodGalleryRepository } from "../../../domain/repositories/mood-gallery.repository.interface";
 import { MOOD_GALLERY_REPOSITORY } from "../../../domain/repositories/mood-gallery.repository.interface";
 import { UpdateMoodGalleryDto } from "../../dto/mood-gallery/update-mood-gallery.dto";
-import {
-  MoodGalleryEntity,
-  UpdateMoodGalleryParams,
-} from "../../../domain/entities/mood-gallery.entity";
+import { MoodGalleryEntity } from "../../../domain/entities/mood-gallery.entity";
 
 @Injectable()
 export class UpdateMoodGalleryUseCase {
@@ -23,17 +21,20 @@ export class UpdateMoodGalleryUseCase {
     id: string,
     dto: UpdateMoodGalleryDto,
   ): Promise<MoodGalleryEntity> {
-    const existing = await this.moodGalleryRepository.findById(id);
+    const existing = await this.moodGalleryRepository.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`MoodGallery with id ${id} not found`);
     }
 
-    const data: UpdateMoodGalleryParams = {};
+    const data: Prisma.MoodGalleryUpdateInput = {};
 
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.imageUrl !== undefined) data.imageUrl = dto.imageUrl;
-    if (dto.imageMobileUrl !== undefined)
+    if (dto.imageMobileUrl !== undefined) {
       data.imageMobileUrl = dto.imageMobileUrl;
+    }
     if (dto.altEs !== undefined) {
       if (dto.altEs === null) {
         throw new BadRequestException("altEs cannot be null");
@@ -51,9 +52,15 @@ export class UpdateMoodGalleryUseCase {
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
     try {
-      return await this.moodGalleryRepository.update(id, data);
-    } catch (error: any) {
-      if (error?.code === "P2025") {
+      return await this.moodGalleryRepository.update({
+        where: { id },
+        data,
+      });
+    } catch (error: unknown) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
         throw new NotFoundException(`MoodGallery with id ${id} not found`);
       }
       throw error;

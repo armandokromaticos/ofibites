@@ -23,7 +23,9 @@ export class DeleteAgencyCardImageUseCase {
   ) {}
 
   async execute(cardId: string): Promise<AgencyCardEntity> {
-    const existing = await this.repository.findById(cardId);
+    const existing = await this.repository.findUnique({
+      where: { id: cardId },
+    });
     if (!existing) {
       throw new NotFoundException(`Agency card with id ${cardId} not found`);
     }
@@ -36,7 +38,10 @@ export class DeleteAgencyCardImageUseCase {
 
     const currentUrl = existing.imageUrl;
 
-    const updated = await this.repository.update(cardId, { imageUrl: null });
+    const updated = await this.repository.update({
+      where: { id: cardId },
+      data: { imageUrl: null },
+    });
 
     await this.deleteFromStorage(currentUrl, cardId);
 

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -18,6 +19,14 @@ import type { IComboRepository } from "../../../domain/repositories/combo.reposi
 import { COMBO_REPOSITORY } from "../../../domain/repositories/combo.repository.interface";
 import type { ICouponRepository } from "../../../domain/repositories/coupon.repository.interface";
 import { COUPON_REPOSITORY } from "../../../domain/repositories/coupon.repository.interface";
+import type { ICompanyMemberRepository } from "../../../domain/repositories/company-member.repository.interface";
+import { COMPANY_MEMBER_REPOSITORY } from "../../../domain/repositories/company-member.repository.interface";
+import type { IBranchRepository } from "../../../domain/repositories/branch.repository.interface";
+import { BRANCH_REPOSITORY } from "../../../domain/repositories/branch.repository.interface";
+import type { IDepartmentRepository } from "../../../domain/repositories/department.repository.interface";
+import { DEPARTMENT_REPOSITORY } from "../../../domain/repositories/department.repository.interface";
+import type { ICompanyAddressRepository } from "../../../domain/repositories/company-address.repository.interface";
+import { COMPANY_ADDRESS_REPOSITORY } from "../../../domain/repositories/company-address.repository.interface";
 import { CreateOrderDto } from "../../dto/orders/create-order.dto";
 import {
   OrderEntity,
@@ -25,6 +34,13 @@ import {
   CreateOrderItemModifierParams,
 } from "../../../domain/entities/order.entity";
 import { CouponEntity } from "../../../domain/entities/coupon.entity";
+import { Role } from "../../../domain/enums/role.enum";
+
+const PLATFORM_BYPASS_MEMBERSHIP_ROLES: ReadonlySet<Role> = new Set([
+  Role.SUPER_ADMIN,
+  Role.OPS_ADMIN,
+  Role.FINANCE_ADMIN,
+]);
 
 @Injectable()
 export class CreateOrderUseCase {
@@ -43,13 +59,29 @@ export class CreateOrderUseCase {
     private readonly comboRepository: IComboRepository,
     @Inject(COUPON_REPOSITORY)
     private readonly couponRepository: ICouponRepository,
+    @Inject(COMPANY_MEMBER_REPOSITORY)
+    private readonly companyMemberRepository: ICompanyMemberRepository,
+    @Inject(BRANCH_REPOSITORY)
+    private readonly branchRepository: IBranchRepository,
+    @Inject(DEPARTMENT_REPOSITORY)
+    private readonly departmentRepository: IDepartmentRepository,
+    @Inject(COMPANY_ADDRESS_REPOSITORY)
+    private readonly companyAddressRepository: ICompanyAddressRepository,
   ) {}
 
-  async execute(userId: string, dto: CreateOrderDto): Promise<OrderEntity> {
+  async execute(
+    userId: string,
+    userRole: Role,
+    dto: CreateOrderDto,
+  ): Promise<OrderEntity> {
+    await this.validateCompanyContext(userId, userRole, dto);
+
     const items: CreateOrderItemParams[] = [];
 
     for (const itemDto of dto.items) {
-      const product = await this.productRepository.findById(itemDto.productId);
+      const product = await this.productRepository.findUnique({
+        where: { id: itemDto.productId },
+      });
       if (!product) {
         throw new NotFoundException(
           `Product with id ${itemDto.productId} not found`,
@@ -59,7 +91,9 @@ export class CreateOrderUseCase {
       let unitPrice: number;
 
       if (itemDto.comboId) {
-        const combo = await this.comboRepository.findById(itemDto.comboId);
+        const combo = await this.comboRepository.findUnique({
+          where: { id: itemDto.comboId },
+        });
         if (!combo) {
           throw new NotFoundException(
             `Combo with id ${itemDto.comboId} not found`,
@@ -67,9 +101,9 @@ export class CreateOrderUseCase {
         }
         unitPrice = combo.price;
       } else if (itemDto.productSizeId) {
-        const size = await this.productSizeRepository.findById(
-          itemDto.productSizeId,
-        );
+        const size = await this.productSizeRepository.findUnique({
+          where: { id: itemDto.productSizeId },
+        });
         if (!size) {
           throw new NotFoundException(
             `ProductSize with id ${itemDto.productSizeId} not found`,
@@ -98,17 +132,17 @@ export class CreateOrderUseCase {
           : new Map<string, number>();
 
         for (const modDto of itemDto.modifiers) {
-          const modifier = await this.productModifierRepository.findById(
-            modDto.modifierId,
-          );
+          const modifier = await this.productModifierRepository.findUnique({
+            where: { id: modDto.modifierId },
+          });
           if (!modifier) {
             throw new NotFoundException(
               `ProductModifier with id ${modDto.modifierId} not found`,
             );
           }
-          const group = await this.productModifierGroupRepository.findById(
-            modifier.groupId,
-          );
+          const group = await this.productModifierGroupRepository.findUnique({
+            where: { id: modifier.groupId },
+          });
           if (!group || group.productId !== itemDto.productId) {
             throw new BadRequestException(
               `ProductModifier ${modDto.modifierId} does not belong to product ${itemDto.productId}`,
@@ -175,6 +209,10 @@ export class CreateOrderUseCase {
     const entity = OrderEntity.fromCreateDto({
       userId,
       couponId: coupon?.id,
+      companyId: dto.companyId,
+      branchId: dto.branchId,
+      departmentId: dto.departmentId,
+      createdById: userId,
       deliveryAddressId: dto.deliveryAddressId,
       deliveryDate: dto.deliveryDate ? new Date(dto.deliveryDate) : undefined,
       deliveryTime: dto.deliveryTime,
@@ -196,5 +234,64 @@ export class CreateOrderUseCase {
     }
 
     return createdOrder;
+  }
+
+  private async validateCompanyContext(
+    userId: string,
+    userRole: Role,
+    dto: CreateOrderDto,
+  ): Promise<void> {
+    if (!PLATFORM_BYPASS_MEMBERSHIP_ROLES.has(userRole)) {
+      const membership =
+        await this.companyMemberRepository.findActiveByUserAndCompany(
+          userId,
+          dto.companyId,
+        );
+      if (!membership) {
+        throw new ForbiddenException("No perteneces a esta empresa");
+      }
+    }
+
+    const address = await this.companyAddressRepository.findUnique({
+      where: { id: dto.deliveryAddressId },
+    });
+    if (!address) {
+      throw new NotFoundException(
+        `Delivery address ${dto.deliveryAddressId} not found`,
+      );
+    }
+    if (address.companyId !== dto.companyId) {
+      throw new BadRequestException(
+        `Delivery address ${dto.deliveryAddressId} does not belong to company ${dto.companyId}`,
+      );
+    }
+
+    if (dto.branchId) {
+      const branch = await this.branchRepository.findUnique({
+        where: { id: dto.branchId },
+      });
+      if (!branch) {
+        throw new NotFoundException(`Branch ${dto.branchId} not found`);
+      }
+      if (branch.companyId !== dto.companyId) {
+        throw new BadRequestException(
+          `Branch ${dto.branchId} does not belong to company ${dto.companyId}`,
+        );
+      }
+    }
+
+    if (dto.departmentId) {
+      const department = await this.departmentRepository.findUnique({
+        where: { id: dto.departmentId },
+      });
+      if (!department) {
+        throw new NotFoundException(`Department ${dto.departmentId} not found`);
+      }
+      if (department.companyId !== dto.companyId) {
+        throw new BadRequestException(
+          `Department ${dto.departmentId} does not belong to company ${dto.companyId}`,
+        );
+      }
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma/prisma.service";
 import { ITagRepository } from "../../domain/repositories/tag.repository.interface";
 import { TagEntity } from "../../domain/entities/tag.entity";
@@ -8,36 +9,43 @@ export class TagRepository implements ITagRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(entity: TagEntity): Promise<TagEntity> {
-    const data = entity.toPrismaCreate();
-    const tag = await this.prisma.tag.create({ data: data as never });
+    const tag = await this.prisma.tag.create({
+      data: entity.toPrismaCreate(),
+    });
     return TagEntity.fromPrisma(tag);
   }
 
-  async findById(id: string): Promise<TagEntity | null> {
-    const tag = await this.prisma.tag.findUnique({ where: { id } });
+  async findUnique(args: Prisma.TagFindUniqueArgs): Promise<TagEntity | null> {
+    const tag = await this.prisma.tag.findUnique(args);
     return tag ? TagEntity.fromPrisma(tag) : null;
   }
 
-  async findAll(): Promise<TagEntity[]> {
-    const tags = await this.prisma.tag.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    return tags.map((tag) => TagEntity.fromPrisma(tag));
+  async findMany(
+    args?: Prisma.TagFindManyArgs,
+  ): Promise<{ data: TagEntity[]; total?: number }> {
+    const rows = await this.prisma.tag.findMany(args);
+    const data = rows.map((row) => TagEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+    if (hasPagination) {
+      const total = await this.prisma.tag.count({ where: args?.where });
+      return { data, total };
+    }
+    return { data };
   }
 
-  async update(id: string, entity: Partial<TagEntity>): Promise<TagEntity> {
-    const data: Record<string, unknown> = {};
-    if (entity.nameEs !== undefined) data.nameEs = entity.nameEs;
-    if (entity.nameEn !== undefined) data.nameEn = entity.nameEn;
-    if (entity.isActive !== undefined) data.isActive = entity.isActive;
-    const tag = await this.prisma.tag.update({
-      where: { id },
-      data: data as never,
-    });
+  async update(args: Prisma.TagUpdateArgs): Promise<TagEntity> {
+    const tag = await this.prisma.tag.update(args);
     return TagEntity.fromPrisma(tag);
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.tag.delete({ where: { id } });
+  }
+
+  async exists(args: Prisma.TagCountArgs): Promise<boolean> {
+    const count = await this.prisma.tag.count(args);
+    return count > 0;
   }
 }

@@ -1,4 +1,4 @@
-import { Banner as PrismaBanner } from "@prisma/client";
+import { Banner as PrismaBanner, Prisma } from "@prisma/client";
 import { BannerResponseDto } from "../../application/dto/banners/banner-response.dto";
 
 interface BannerProps {
@@ -30,20 +30,6 @@ export interface CreateBannerParams {
   startDate?: Date;
   endDate?: Date;
   isActive: boolean;
-}
-
-export interface UpdateBannerParams {
-  title?: string | null;
-  imageUrl?: string | null;
-  imageMobileUrl?: string | null;
-  altText?: string;
-  linkUrl?: string | null;
-  section?: string;
-  order?: number;
-  backgroundColor?: string | null;
-  startDate?: Date | null;
-  endDate?: Date | null;
-  isActive?: boolean;
 }
 
 export class BannerEntity {
@@ -142,7 +128,7 @@ export class BannerEntity {
     });
   }
 
-  toPrismaCreate() {
+  toPrismaCreate(): Prisma.BannerCreateInput {
     return {
       title: this.props.title,
       imageUrl: this.props.imageUrl,

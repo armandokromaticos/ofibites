@@ -4,6 +4,7 @@ import { PrismaService } from "../database/prisma/prisma.service";
 import {
   IProductModifierRepository,
   ModifierSizePriceEntry,
+  PRODUCT_MODIFIER_FULL_INCLUDE,
 } from "../../domain/repositories/product-modifier.repository.interface";
 import { ProductModifierEntity } from "../../domain/entities/product-modifier.entity";
 
@@ -11,36 +12,52 @@ import { ProductModifierEntity } from "../../domain/entities/product-modifier.en
 export class ProductModifierRepository implements IProductModifierRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private static readonly MODIFIER_INCLUDE = {
-    tags: { include: { tag: true } },
-    sizePrices: true,
-  };
-
   async create(entity: ProductModifierEntity): Promise<ProductModifierEntity> {
-    const data = entity.toPrismaCreate();
     const modifier = await this.prisma.productModifier.create({
-      data: data as never,
-      include: ProductModifierRepository.MODIFIER_INCLUDE,
+      data: entity.toPrismaCreate(),
+      include: PRODUCT_MODIFIER_FULL_INCLUDE,
     });
     return ProductModifierEntity.fromPrisma(modifier);
   }
 
-  async findById(id: string): Promise<ProductModifierEntity | null> {
-    const modifier = await this.prisma.productModifier.findUnique({
-      where: { id },
-      include: ProductModifierRepository.MODIFIER_INCLUDE,
-    });
+  async findUnique(
+    args: Prisma.ProductModifierFindUniqueArgs,
+  ): Promise<ProductModifierEntity | null> {
+    const modifier = await this.prisma.productModifier.findUnique(args);
     return modifier ? ProductModifierEntity.fromPrisma(modifier) : null;
   }
 
-  async findByGroupId(groupId: string): Promise<ProductModifierEntity[]> {
-    const modifiers = await this.prisma.productModifier.findMany({
-      where: { groupId },
-      include: ProductModifierRepository.MODIFIER_INCLUDE,
-    });
-    return modifiers.map((modifier) =>
-      ProductModifierEntity.fromPrisma(modifier),
-    );
+  async findMany(
+    args?: Prisma.ProductModifierFindManyArgs,
+  ): Promise<{ data: ProductModifierEntity[]; total?: number }> {
+    const rows = await this.prisma.productModifier.findMany(args);
+    const data = rows.map((row) => ProductModifierEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+    if (hasPagination) {
+      const total = await this.prisma.productModifier.count({
+        where: args?.where,
+      });
+      return { data, total };
+    }
+    return { data };
+  }
+
+  async update(
+    args: Prisma.ProductModifierUpdateArgs,
+  ): Promise<ProductModifierEntity> {
+    const modifier = await this.prisma.productModifier.update(args);
+    return ProductModifierEntity.fromPrisma(modifier);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.productModifier.delete({ where: { id } });
+  }
+
+  async exists(args: Prisma.ProductModifierCountArgs): Promise<boolean> {
+    const count = await this.prisma.productModifier.count(args);
+    return count > 0;
   }
 
   async assignTags(modifierId: string, tagIds: string[]): Promise<void> {
@@ -54,36 +71,6 @@ export class ProductModifierRepository implements IProductModifierRepository {
     await this.prisma.productModifierTag.delete({
       where: { modifierId_tagId: { modifierId, tagId } },
     });
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.prisma.productModifier.delete({ where: { id } });
-  }
-
-  async update(
-    id: string,
-    entity: Partial<ProductModifierEntity>,
-  ): Promise<ProductModifierEntity> {
-    const data: Record<string, unknown> = {};
-    if (entity.nameEs !== undefined) data.nameEs = entity.nameEs;
-    if (entity.nameEn !== undefined) data.nameEn = entity.nameEn;
-    if (entity.priceAdjustment !== undefined) {
-      data.priceAdjustment = new Prisma.Decimal(entity.priceAdjustment);
-    }
-    if (entity.isDefault !== undefined) data.isDefault = entity.isDefault;
-    if (entity.isActive !== undefined) data.isActive = entity.isActive;
-    if (entity.sizeRestricted !== undefined)
-      data.sizeRestricted = entity.sizeRestricted;
-    if (entity.sortOrder !== undefined) data.sortOrder = entity.sortOrder;
-    if (entity.groupId !== undefined) {
-      data.group = { connect: { id: entity.groupId } };
-    }
-    const modifier = await this.prisma.productModifier.update({
-      where: { id },
-      data: data as never,
-      include: ProductModifierRepository.MODIFIER_INCLUDE,
-    });
-    return ProductModifierEntity.fromPrisma(modifier);
   }
 
   async setSizePrices(

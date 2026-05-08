@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma/prisma.service";
 import { IProductModifierGroupRepository } from "../../domain/repositories/product-modifier-group.repository.interface";
 import { ProductModifierGroupEntity } from "../../domain/entities/product-modifier-group.entity";
@@ -10,54 +11,49 @@ export class ProductModifierGroupRepository implements IProductModifierGroupRepo
   async create(
     entity: ProductModifierGroupEntity,
   ): Promise<ProductModifierGroupEntity> {
-    const data = entity.toPrismaCreate();
     const group = await this.prisma.productModifierGroup.create({
-      data: data as never,
+      data: entity.toPrismaCreate(),
     });
     return ProductModifierGroupEntity.fromPrisma(group);
   }
 
-  async findById(id: string): Promise<ProductModifierGroupEntity | null> {
-    const group = await this.prisma.productModifierGroup.findUnique({
-      where: { id },
-    });
+  async findUnique(
+    args: Prisma.ProductModifierGroupFindUniqueArgs,
+  ): Promise<ProductModifierGroupEntity | null> {
+    const group = await this.prisma.productModifierGroup.findUnique(args);
     return group ? ProductModifierGroupEntity.fromPrisma(group) : null;
   }
 
-  async findByProductId(
-    productId: string,
-  ): Promise<ProductModifierGroupEntity[]> {
-    const groups = await this.prisma.productModifierGroup.findMany({
-      where: { productId },
-    });
-    return groups.map((group) => ProductModifierGroupEntity.fromPrisma(group));
+  async findMany(
+    args?: Prisma.ProductModifierGroupFindManyArgs,
+  ): Promise<{ data: ProductModifierGroupEntity[]; total?: number }> {
+    const rows = await this.prisma.productModifierGroup.findMany(args);
+    const data = rows.map((row) => ProductModifierGroupEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+    if (hasPagination) {
+      const total = await this.prisma.productModifierGroup.count({
+        where: args?.where,
+      });
+      return { data, total };
+    }
+    return { data };
   }
 
   async update(
-    id: string,
-    entity: Partial<ProductModifierGroupEntity>,
+    args: Prisma.ProductModifierGroupUpdateArgs,
   ): Promise<ProductModifierGroupEntity> {
-    const data: Record<string, unknown> = {};
-    if (entity.nameEs !== undefined) data.nameEs = entity.nameEs;
-    if (entity.nameEn !== undefined) data.nameEn = entity.nameEn;
-    if (entity.descriptionEs !== undefined)
-      data.descriptionEs = entity.descriptionEs;
-    if (entity.descriptionEn !== undefined)
-      data.descriptionEn = entity.descriptionEn;
-    if (entity.minSelect !== undefined) data.minSelect = entity.minSelect;
-    if (entity.maxSelect !== undefined) data.maxSelect = entity.maxSelect;
-    if (entity.sortOrder !== undefined) data.sortOrder = entity.sortOrder;
-    if (entity.productId !== undefined) {
-      data.product = { connect: { id: entity.productId } };
-    }
-    const group = await this.prisma.productModifierGroup.update({
-      where: { id },
-      data: data as never,
-    });
+    const group = await this.prisma.productModifierGroup.update(args);
     return ProductModifierGroupEntity.fromPrisma(group);
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.productModifierGroup.delete({ where: { id } });
+  }
+
+  async exists(args: Prisma.ProductModifierGroupCountArgs): Promise<boolean> {
+    const count = await this.prisma.productModifierGroup.count(args);
+    return count > 0;
   }
 }

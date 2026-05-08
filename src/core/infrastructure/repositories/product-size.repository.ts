@@ -9,54 +9,47 @@ export class ProductSizeRepository implements IProductSizeRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(entity: ProductSizeEntity): Promise<ProductSizeEntity> {
-    const data = entity.toPrismaCreate();
-    const size = await this.prisma.productSize.create({ data: data as never });
+    const size = await this.prisma.productSize.create({
+      data: entity.toPrismaCreate(),
+    });
     return ProductSizeEntity.fromPrisma(size);
   }
 
-  async findById(id: string): Promise<ProductSizeEntity | null> {
-    const size = await this.prisma.productSize.findUnique({
-      where: { id },
-    });
+  async findUnique(
+    args: Prisma.ProductSizeFindUniqueArgs,
+  ): Promise<ProductSizeEntity | null> {
+    const size = await this.prisma.productSize.findUnique(args);
     return size ? ProductSizeEntity.fromPrisma(size) : null;
   }
 
-  async findByProductId(productId: string): Promise<ProductSizeEntity[]> {
-    const sizes = await this.prisma.productSize.findMany({
-      where: { productId },
-    });
-    return sizes.map((size) => ProductSizeEntity.fromPrisma(size));
+  async findMany(
+    args?: Prisma.ProductSizeFindManyArgs,
+  ): Promise<{ data: ProductSizeEntity[]; total?: number }> {
+    const rows = await this.prisma.productSize.findMany(args);
+    const data = rows.map((row) => ProductSizeEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+    if (hasPagination) {
+      const total = await this.prisma.productSize.count({
+        where: args?.where,
+      });
+      return { data, total };
+    }
+    return { data };
   }
 
-  async update(
-    id: string,
-    entity: Partial<ProductSizeEntity>,
-  ): Promise<ProductSizeEntity> {
-    const data: Record<string, unknown> = {};
-    if (entity.nameEs !== undefined) data.nameEs = entity.nameEs;
-    if (entity.nameEn !== undefined) data.nameEn = entity.nameEn;
-    if (entity.descriptionEs !== undefined)
-      data.descriptionEs = entity.descriptionEs;
-    if (entity.descriptionEn !== undefined)
-      data.descriptionEn = entity.descriptionEn;
-    if (entity.price !== undefined) {
-      data.price = new Prisma.Decimal(entity.price);
-    }
-    if (entity.stock !== undefined) data.stock = entity.stock;
-    if (entity.sortOrder !== undefined) data.sortOrder = entity.sortOrder;
-    if (entity.isDefault !== undefined) data.isDefault = entity.isDefault;
-    if (entity.isActive !== undefined) data.isActive = entity.isActive;
-    if (entity.productId !== undefined) {
-      data.product = { connect: { id: entity.productId } };
-    }
-    const size = await this.prisma.productSize.update({
-      where: { id },
-      data: data as never,
-    });
+  async update(args: Prisma.ProductSizeUpdateArgs): Promise<ProductSizeEntity> {
+    const size = await this.prisma.productSize.update(args);
     return ProductSizeEntity.fromPrisma(size);
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.productSize.delete({ where: { id } });
+  }
+
+  async exists(args: Prisma.ProductSizeCountArgs): Promise<boolean> {
+    const count = await this.prisma.productSize.count(args);
+    return count > 0;
   }
 }

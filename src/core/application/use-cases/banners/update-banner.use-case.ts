@@ -4,13 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import type { IBannerRepository } from "../../../domain/repositories/banner.repository.interface";
 import { BANNER_REPOSITORY } from "../../../domain/repositories/banner.repository.interface";
 import { UpdateBannerDto } from "../../dto/banners/update-banner.dto";
-import {
-  BannerEntity,
-  UpdateBannerParams,
-} from "../../../domain/entities/banner.entity";
+import { BannerEntity } from "../../../domain/entities/banner.entity";
 
 @Injectable()
 export class UpdateBannerUseCase {
@@ -20,23 +18,25 @@ export class UpdateBannerUseCase {
   ) {}
 
   async execute(id: string, dto: UpdateBannerDto): Promise<BannerEntity> {
-    const banner = await this.bannerRepository.findById(id);
+    const banner = await this.bannerRepository.findUnique({ where: { id } });
     if (!banner) {
       throw new NotFoundException(`Banner with id ${id} not found`);
     }
 
-    const data: UpdateBannerParams = {};
+    const data: Prisma.BannerUpdateInput = {};
 
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.imageUrl !== undefined) data.imageUrl = dto.imageUrl;
-    if (dto.imageMobileUrl !== undefined)
+    if (dto.imageMobileUrl !== undefined) {
       data.imageMobileUrl = dto.imageMobileUrl;
+    }
     if (dto.altText !== undefined) data.altText = dto.altText;
     if (dto.linkUrl !== undefined) data.linkUrl = dto.linkUrl;
     if (dto.section !== undefined) data.section = dto.section;
     if (dto.order !== undefined) data.order = dto.order;
-    if (dto.backgroundColor !== undefined)
+    if (dto.backgroundColor !== undefined) {
       data.backgroundColor = dto.backgroundColor;
+    }
     if (dto.startDate !== undefined) {
       if (dto.startDate) {
         const parsed = new Date(dto.startDate);
@@ -62,9 +62,13 @@ export class UpdateBannerUseCase {
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
 
     const effectiveStartDate =
-      data.startDate !== undefined ? data.startDate : banner.startDate;
+      data.startDate !== undefined
+        ? (data.startDate as Date | null)
+        : banner.startDate;
     const effectiveEndDate =
-      data.endDate !== undefined ? data.endDate : banner.endDate;
+      data.endDate !== undefined
+        ? (data.endDate as Date | null)
+        : banner.endDate;
 
     if (
       effectiveStartDate &&
@@ -74,6 +78,6 @@ export class UpdateBannerUseCase {
       throw new BadRequestException("startDate must be before endDate");
     }
 
-    return await this.bannerRepository.update(id, data);
+    return this.bannerRepository.update({ where: { id }, data });
   }
 }

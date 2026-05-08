@@ -38,7 +38,9 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException("Usuario no autenticado");
     }
 
-    const user = await this.userRepository.findByAuthId(authUser.authId);
+    const user = await this.userRepository.findUnique({
+      where: { authId: authUser.authId },
+    });
 
     if (!user) {
       throw new ForbiddenException("Usuario no encontrado");
@@ -48,7 +50,7 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException("Usuario desactivado");
     }
 
-    const hasRole = requiredRoles.some((role) => (user.role as Role) === role);
+    const hasRole = requiredRoles.some((role) => user.role === role);
 
     if (!hasRole) {
       throw new ForbiddenException("No tienes permisos para esta acción");

@@ -1,4 +1,4 @@
-import { AgencyCard as PrismaAgencyCard } from "@prisma/client";
+import { AgencyCard as PrismaAgencyCard, Prisma } from "@prisma/client";
 import { AgencyCardResponseDto } from "../../application/dto/agency-cards/agency-card-response.dto";
 
 interface AgencyCardProps {
@@ -34,22 +34,6 @@ export interface CreateAgencyCardParams {
   tiktokUrl?: string;
   order: number;
   isActive: boolean;
-}
-
-export interface UpdateAgencyCardParams {
-  title?: string;
-  imageUrl?: string | null;
-  location?: string;
-  lodgingType?: string;
-  distance?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  socialHandle?: string | null;
-  facebookUrl?: string | null;
-  instagramUrl?: string | null;
-  tiktokUrl?: string | null;
-  order?: number;
-  isActive?: boolean;
 }
 
 export class AgencyCardEntity {
@@ -150,7 +134,7 @@ export class AgencyCardEntity {
     });
   }
 
-  toPrismaCreate() {
+  toPrismaCreate(): Prisma.AgencyCardCreateInput {
     return {
       title: this.props.title,
       imageUrl: this.props.imageUrl,

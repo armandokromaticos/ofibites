@@ -15,8 +15,13 @@ export class GetBannersUseCase {
     activeOnly?: boolean,
   ): Promise<BannerEntity[]> {
     if (activeOnly) {
-      return await this.bannerRepository.findAllActive(section);
+      return this.bannerRepository.findAllActive(section);
     }
-    return await this.bannerRepository.findAll(section);
+    const where = section ? { section } : undefined;
+    const { data } = await this.bannerRepository.findMany({
+      where,
+      orderBy: { order: "asc" },
+    });
+    return data;
   }
 }

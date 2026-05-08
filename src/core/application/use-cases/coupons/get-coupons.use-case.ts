@@ -1,6 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { ICouponRepository } from "../../../domain/repositories/coupon.repository.interface";
-import { COUPON_REPOSITORY } from "../../../domain/repositories/coupon.repository.interface";
+import {
+  COUPON_FULL_INCLUDE,
+  COUPON_REPOSITORY,
+} from "../../../domain/repositories/coupon.repository.interface";
 import { CouponEntity } from "../../../domain/entities/coupon.entity";
 import { CouponType } from "../../../domain/enums/coupon-type.enum";
 
@@ -12,6 +15,12 @@ export class GetCouponsUseCase {
   ) {}
 
   async execute(type?: CouponType): Promise<CouponEntity[]> {
-    return await this.couponRepository.findAll(type);
+    const where = type ? { type } : undefined;
+    const { data } = await this.couponRepository.findMany({
+      where,
+      include: COUPON_FULL_INCLUDE,
+      orderBy: { createdAt: "desc" },
+    });
+    return data;
   }
 }

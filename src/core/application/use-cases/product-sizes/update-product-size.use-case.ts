@@ -4,12 +4,14 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import type { IProductSizeRepository } from "../../../domain/repositories/product-size.repository.interface";
 import { PRODUCT_SIZE_REPOSITORY } from "../../../domain/repositories/product-size.repository.interface";
 import type { IProductRepository } from "../../../domain/repositories/product.repository.interface";
 import { PRODUCT_REPOSITORY } from "../../../domain/repositories/product.repository.interface";
 import { UpdateProductSizeDto } from "../../dto/product-sizes/update-product-size.dto";
 import { ProductSizeEntity } from "../../../domain/entities/product-size.entity";
+import { recalculateProductStock } from "./recalculate-product-stock";
 
 @Injectable()
 export class UpdateProductSizeUseCase {
@@ -28,35 +30,37 @@ export class UpdateProductSizeUseCase {
     if (!hasUpdates) {
       throw new BadRequestException("No fields provided for update");
     }
-    const existing = await this.productSizeRepository.findById(id);
+    const existing = await this.productSizeRepository.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Product size with id "${id}" not found`);
     }
-    const updated = await this.productSizeRepository.update(
-      id,
-      dto as Partial<ProductSizeEntity>,
-    );
+
+    const data: Prisma.ProductSizeUpdateInput = {};
+    if (dto.nameEs !== undefined) data.nameEs = dto.nameEs;
+    if (dto.nameEn !== undefined) data.nameEn = dto.nameEn;
+    if (dto.descriptionEs !== undefined) data.descriptionEs = dto.descriptionEs;
+    if (dto.descriptionEn !== undefined) data.descriptionEn = dto.descriptionEn;
+    if (dto.price !== undefined) data.price = new Prisma.Decimal(dto.price);
+    if (dto.stock !== undefined) data.stock = dto.stock;
+    if (dto.sortOrder !== undefined) data.sortOrder = dto.sortOrder;
+    if (dto.isDefault !== undefined) data.isDefault = dto.isDefault;
+    if (dto.isActive !== undefined) data.isActive = dto.isActive;
+
+    const updated = await this.productSizeRepository.update({
+      where: { id },
+      data,
+    });
 
     if (dto.stock !== undefined || dto.isActive !== undefined) {
-      await this.recalculateProductStock(existing.productId);
+      await recalculateProductStock(
+        existing.productId,
+        this.productSizeRepository,
+        this.productRepository,
+      );
     }
 
     return updated;
-  }
-
-  private async recalculateProductStock(productId: string): Promise<void> {
-    const sizes = await this.productSizeRepository.findByProductId(productId);
-    const activeSizesWithStock = sizes.filter(
-      (size) => size.isActive && size.stock !== null,
-    );
-    if (activeSizesWithStock.length === 0) {
-      await this.productRepository.updateStock(productId, null);
-      return;
-    }
-    const totalStock = activeSizesWithStock.reduce(
-      (sum, size) => sum + size.stock!,
-      0,
-    );
-    await this.productRepository.updateStock(productId, totalStock);
   }
 }

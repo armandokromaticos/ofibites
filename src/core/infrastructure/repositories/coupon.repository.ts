@@ -1,79 +1,66 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma/prisma.service";
-import { ICouponRepository } from "../../domain/repositories/coupon.repository.interface";
 import {
-  CouponEntity,
-  UpdateCouponParams,
-} from "../../domain/entities/coupon.entity";
-import { CouponType } from "../../domain/enums/coupon-type.enum";
+  COUPON_FULL_INCLUDE,
+  ICouponRepository,
+} from "../../domain/repositories/coupon.repository.interface";
+import { CouponEntity } from "../../domain/entities/coupon.entity";
 
 @Injectable()
 export class CouponRepository implements ICouponRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  private static readonly COUPON_INCLUDE = {
-    usages: true,
-  };
-
   async create(entity: CouponEntity): Promise<CouponEntity> {
-    const data = entity.toPrismaCreate();
     const coupon = await this.prisma.coupon.create({
-      data,
-      include: CouponRepository.COUPON_INCLUDE,
+      data: entity.toPrismaCreate(),
+      include: COUPON_FULL_INCLUDE,
     });
     return CouponEntity.fromPrisma(coupon);
   }
 
-  async findById(id: string): Promise<CouponEntity | null> {
-    const coupon = await this.prisma.coupon.findUnique({
-      where: { id },
-      include: CouponRepository.COUPON_INCLUDE,
-    });
+  async findUnique(
+    args: Prisma.CouponFindUniqueArgs,
+  ): Promise<CouponEntity | null> {
+    const coupon = await this.prisma.coupon.findUnique(args);
     return coupon ? CouponEntity.fromPrisma(coupon) : null;
+  }
+
+  async findMany(
+    args?: Prisma.CouponFindManyArgs,
+  ): Promise<{ data: CouponEntity[]; total?: number }> {
+    const rows = await this.prisma.coupon.findMany(args);
+    const data = rows.map((row) => CouponEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+    if (hasPagination) {
+      const total = await this.prisma.coupon.count({ where: args?.where });
+      return { data, total };
+    }
+    return { data };
+  }
+
+  async update(args: Prisma.CouponUpdateArgs): Promise<CouponEntity> {
+    const coupon = await this.prisma.coupon.update(args);
+    return CouponEntity.fromPrisma(coupon);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.coupon.delete({ where: { id } });
+  }
+
+  async exists(args: Prisma.CouponCountArgs): Promise<boolean> {
+    const count = await this.prisma.coupon.count(args);
+    return count > 0;
   }
 
   async findByName(name: string): Promise<CouponEntity | null> {
     const coupon = await this.prisma.coupon.findUnique({
       where: { nameEs: name },
-      include: CouponRepository.COUPON_INCLUDE,
+      include: COUPON_FULL_INCLUDE,
     });
     return coupon ? CouponEntity.fromPrisma(coupon) : null;
-  }
-
-  async findAll(type?: CouponType): Promise<CouponEntity[]> {
-    const where = type ? { type } : {};
-    const coupons = await this.prisma.coupon.findMany({
-      where,
-      include: CouponRepository.COUPON_INCLUDE,
-      orderBy: { createdAt: "desc" },
-    });
-    return coupons.map((coupon) => CouponEntity.fromPrisma(coupon));
-  }
-
-  async update(id: string, data: UpdateCouponParams): Promise<CouponEntity> {
-    const coupon = await this.prisma.coupon.update({
-      where: { id },
-      data,
-      include: CouponRepository.COUPON_INCLUDE,
-    });
-    return CouponEntity.fromPrisma(coupon);
-  }
-
-  async createUsage(
-    couponId: string,
-    userId: string,
-    orderId: string,
-  ): Promise<void> {
-    await this.prisma.couponUsage.create({
-      data: { couponId, userId, orderId },
-    });
-  }
-
-  async incrementUsedQuantity(id: string): Promise<void> {
-    await this.prisma.coupon.update({
-      where: { id },
-      data: { usedQuantity: { increment: 1 } },
-    });
   }
 
   async consumeCoupon(

@@ -11,10 +11,10 @@ export class GetUserUseCase {
   ) {}
 
   async execute(id: string): Promise<UserEntity> {
-    const user = await this.userRepository.findById(id);
+    const user = await this.userRepository.findUnique({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    return UserEntity.fromPrisma(user);
+    return user;
   }
 }

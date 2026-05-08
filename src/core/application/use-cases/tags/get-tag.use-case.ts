@@ -11,7 +11,7 @@ export class GetTagUseCase {
   ) {}
 
   async execute(id: string): Promise<TagEntity> {
-    const tag = await this.tagRepository.findById(id);
+    const tag = await this.tagRepository.findUnique({ where: { id } });
     if (!tag) {
       throw new NotFoundException(`Tag with id ${id} not found`);
     }

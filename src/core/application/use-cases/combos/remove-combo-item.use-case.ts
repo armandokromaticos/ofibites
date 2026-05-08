@@ -1,6 +1,9 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { IComboRepository } from "../../../domain/repositories/combo.repository.interface";
-import { COMBO_REPOSITORY } from "../../../domain/repositories/combo.repository.interface";
+import {
+  COMBO_FULL_INCLUDE,
+  COMBO_REPOSITORY,
+} from "../../../domain/repositories/combo.repository.interface";
 import { ComboEntity } from "../../../domain/entities/combo.entity";
 
 @Injectable()
@@ -11,7 +14,10 @@ export class RemoveComboItemUseCase {
   ) {}
 
   async execute(comboId: string, itemId: string): Promise<ComboEntity> {
-    const combo = await this.comboRepository.findById(comboId);
+    const combo = await this.comboRepository.findUnique({
+      where: { id: comboId },
+      include: COMBO_FULL_INCLUDE,
+    });
     if (!combo) {
       throw new NotFoundException(`Combo with id ${comboId} not found`);
     }

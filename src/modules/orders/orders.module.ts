@@ -1,6 +1,9 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
 import { CouponsModule } from "../coupons/coupons.module";
+import { BranchesModule } from "../branches/branches.module";
+import { DepartmentsModule } from "../departments/departments.module";
+import { CompanyAddressesModule } from "../company-addresses/company-addresses.module";
 import { OrdersController } from "./controllers/orders.controller";
 import { ORDER_REPOSITORY } from "../../core/domain/repositories/order.repository.interface";
 import { OrderRepository } from "../../core/infrastructure/repositories/order.repository";
@@ -21,7 +24,13 @@ import { CancelOrderUseCase } from "../../core/application/use-cases/orders/canc
 import { UpdateOrderStatusUseCase } from "../../core/application/use-cases/orders/update-order-status.use-case";
 
 @Module({
-  imports: [AuthModule, CouponsModule],
+  imports: [
+    AuthModule,
+    CouponsModule,
+    BranchesModule,
+    DepartmentsModule,
+    CompanyAddressesModule,
+  ],
   controllers: [OrdersController],
   providers: [
     { provide: ORDER_REPOSITORY, useClass: OrderRepository },

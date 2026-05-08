@@ -12,7 +12,7 @@ export class DeleteAgencyCardUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    const card = await this.repository.findById(id);
+    const card = await this.repository.findUnique({ where: { id } });
     if (!card) {
       throw new NotFoundException(`Agency card with id ${id} not found`);
     }

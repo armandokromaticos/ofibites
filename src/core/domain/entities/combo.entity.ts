@@ -1,6 +1,7 @@
 import {
   Combo as PrismaCombo,
   ComboItem as PrismaComboItem,
+  Prisma,
   Product as PrismaProduct,
 } from "@prisma/client";
 import { CreateComboDto } from "../../application/dto/combos/create-combo.dto";
@@ -123,13 +124,13 @@ export class ComboEntity {
     });
   }
 
-  toPrismaCreate(): Record<string, unknown> {
+  toPrismaCreate(): Prisma.ComboCreateInput {
     return {
       nameEs: this.props.nameEs,
       nameEn: this.props.nameEn,
       descriptionEs: this.props.descriptionEs,
       descriptionEn: this.props.descriptionEn,
-      price: this.props.price,
+      price: new Prisma.Decimal(this.props.price),
       image: this.props.image,
       isActive: this.props.isActive,
     };

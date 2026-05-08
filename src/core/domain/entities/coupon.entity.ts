@@ -1,6 +1,7 @@
 import {
   Coupon as PrismaCoupon,
   CouponUsage as PrismaCouponUsage,
+  Prisma,
 } from "@prisma/client";
 import { CouponType } from "../enums/coupon-type.enum";
 import {
@@ -44,16 +45,6 @@ export interface CreateCouponParams {
   totalQuantity: number;
   expiresAt: Date;
   isActive: boolean;
-}
-
-export interface UpdateCouponParams {
-  nameEs?: string;
-  nameEn?: string | null;
-  discountPercent?: number;
-  maxDiscount?: number;
-  totalQuantity?: number;
-  expiresAt?: Date;
-  isActive?: boolean;
 }
 
 export class CouponEntity {
@@ -167,13 +158,13 @@ export class CouponEntity {
     return new CouponEntity(props);
   }
 
-  toPrismaCreate() {
+  toPrismaCreate(): Prisma.CouponCreateInput {
     return {
       type: this.props.type,
       nameEs: this.props.nameEs,
       nameEn: this.props.nameEn,
-      discountPercent: this.props.discountPercent,
-      maxDiscount: this.props.maxDiscount,
+      discountPercent: new Prisma.Decimal(this.props.discountPercent),
+      maxDiscount: new Prisma.Decimal(this.props.maxDiscount),
       totalQuantity: this.props.totalQuantity,
       usedQuantity: this.props.usedQuantity,
       expiresAt: this.props.expiresAt,

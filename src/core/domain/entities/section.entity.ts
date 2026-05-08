@@ -1,13 +1,14 @@
 import {
-  Section as PrismaSection,
-  SectionItem as PrismaSectionItem,
-  Product as PrismaProduct,
-  ProductSize as PrismaProductSize,
-  ProductModifierGroup as PrismaProductModifierGroup,
-  ProductModifier as PrismaProductModifier,
-  Tag as PrismaTag,
   Combo as PrismaCombo,
   ComboItem as PrismaComboItem,
+  Prisma,
+  Product as PrismaProduct,
+  ProductModifier as PrismaProductModifier,
+  ProductModifierGroup as PrismaProductModifierGroup,
+  ProductSize as PrismaProductSize,
+  Section as PrismaSection,
+  SectionItem as PrismaSectionItem,
+  Tag as PrismaTag,
 } from "@prisma/client";
 import { CreateSectionDto } from "../../application/dto/sections/create-section.dto";
 import {
@@ -136,7 +137,7 @@ export class SectionEntity {
     });
   }
 
-  toPrismaCreate(): Record<string, unknown> {
+  toPrismaCreate(): Prisma.SectionCreateInput {
     return {
       nameEs: this.props.nameEs,
       nameEn: this.props.nameEn,

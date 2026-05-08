@@ -2,7 +2,10 @@ import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { randomUUID } from "crypto";
 import { extname } from "node:path";
 import type { IProductRepository } from "../../../domain/repositories/product.repository.interface";
-import { PRODUCT_REPOSITORY } from "../../../domain/repositories/product.repository.interface";
+import {
+  PRODUCT_FULL_INCLUDE,
+  PRODUCT_REPOSITORY,
+} from "../../../domain/repositories/product.repository.interface";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 import { ProductEntity } from "../../../domain/entities/product.entity";
 
@@ -26,7 +29,9 @@ export class UploadProductImageUseCase {
     productId: string,
     file: UploadFileInput,
   ): Promise<ProductEntity> {
-    const existing = await this.productRepository.findById(productId);
+    const existing = await this.productRepository.findUnique({
+      where: { id: productId },
+    });
     if (!existing) {
       throw new NotFoundException(`Product with id ${productId} not found`);
     }
@@ -54,8 +59,10 @@ export class UploadProductImageUseCase {
       file.mimetype,
     );
 
-    return this.productRepository.update(productId, {
-      image: publicUrl,
-    } as Partial<ProductEntity>);
+    return this.productRepository.update({
+      where: { id: productId },
+      data: { image: publicUrl },
+      include: PRODUCT_FULL_INCLUDE,
+    });
   }
 }

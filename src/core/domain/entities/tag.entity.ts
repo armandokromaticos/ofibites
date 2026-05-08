@@ -1,4 +1,4 @@
-import { Tag as PrismaTag } from "@prisma/client";
+import { Prisma, Tag as PrismaTag } from "@prisma/client";
 import { CreateTagDto } from "../../application/dto/tags/create-tag.dto";
 import { TagResponseDto } from "../../application/dto/tags/tag-response.dto";
 
@@ -59,7 +59,7 @@ export class TagEntity {
     });
   }
 
-  toPrismaCreate(): Record<string, unknown> {
+  toPrismaCreate(): Prisma.TagCreateInput {
     return {
       nameEs: this.props.nameEs,
       nameEn: this.props.nameEn,

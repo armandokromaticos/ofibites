@@ -8,8 +8,12 @@ export class OrderItemModifierResponseDto {
   @ApiProperty()
   modifierId: string;
 
-  @ApiProperty()
-  priceAdjustment: number;
+  @ApiProperty({
+    nullable: true,
+    type: Number,
+    description: "Oculto para roles sin acceso a precios",
+  })
+  priceAdjustment: number | null;
 }
 
 export class OrderItemResponseDto {
@@ -28,11 +32,19 @@ export class OrderItemResponseDto {
   @ApiProperty()
   quantity: number;
 
-  @ApiProperty()
-  unitPrice: number;
+  @ApiProperty({
+    nullable: true,
+    type: Number,
+    description: "Oculto para roles sin acceso a precios",
+  })
+  unitPrice: number | null;
 
-  @ApiProperty()
-  subtotal: number;
+  @ApiProperty({
+    nullable: true,
+    type: Number,
+    description: "Oculto para roles sin acceso a precios",
+  })
+  subtotal: number | null;
 
   @ApiPropertyOptional({ type: () => [OrderItemModifierResponseDto] })
   modifiers?: OrderItemModifierResponseDto[];
@@ -48,8 +60,8 @@ export class OrderResponseDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   couponId: string | null;
 
-  @ApiPropertyOptional({ nullable: true, type: String })
-  companyId: string | null;
+  @ApiProperty()
+  companyId: string;
 
   @ApiPropertyOptional({ nullable: true, type: String })
   branchId: string | null;
@@ -57,11 +69,11 @@ export class OrderResponseDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   departmentId: string | null;
 
-  @ApiPropertyOptional({ nullable: true, type: String })
-  createdById: string | null;
+  @ApiProperty()
+  createdById: string;
 
-  @ApiPropertyOptional({ nullable: true, type: String })
-  deliveryAddressId: string | null;
+  @ApiProperty()
+  deliveryAddressId: string;
 
   @ApiPropertyOptional({ nullable: true, type: Date })
   deliveryDate: Date | null;
@@ -78,14 +90,26 @@ export class OrderResponseDto {
   @ApiProperty()
   status: string;
 
-  @ApiProperty()
-  subtotal: number;
+  @ApiProperty({
+    nullable: true,
+    type: Number,
+    description: "Oculto para roles sin acceso a precios",
+  })
+  subtotal: number | null;
 
-  @ApiProperty()
-  discount: number;
+  @ApiProperty({
+    nullable: true,
+    type: Number,
+    description: "Oculto para roles sin acceso a precios",
+  })
+  discount: number | null;
 
-  @ApiProperty()
-  total: number;
+  @ApiProperty({
+    nullable: true,
+    type: Number,
+    description: "Oculto para roles sin acceso a precios",
+  })
+  total: number | null;
 
   @ApiProperty()
   createdAt: Date;

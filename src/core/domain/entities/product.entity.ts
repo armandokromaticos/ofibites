@@ -152,17 +152,17 @@ export class ProductEntity {
     });
   }
 
-  toPrismaCreate(): Record<string, unknown> {
-    const data: Record<string, unknown> = {};
-    data.nameEs = this.props.nameEs;
-    data.nameEn = this.props.nameEn;
-    data.descriptionEs = this.props.descriptionEs;
-    data.descriptionEn = this.props.descriptionEn;
-    data.basePrice = new Prisma.Decimal(this.props.basePrice);
-    data.image = this.props.image;
-    data.stock = this.props.stock;
-    data.isActive = this.props.isActive;
-    return data;
+  toPrismaCreate(): Prisma.ProductCreateInput {
+    return {
+      nameEs: this.props.nameEs,
+      nameEn: this.props.nameEn,
+      descriptionEs: this.props.descriptionEs,
+      descriptionEn: this.props.descriptionEn,
+      basePrice: new Prisma.Decimal(this.props.basePrice),
+      image: this.props.image,
+      stock: this.props.stock,
+      isActive: this.props.isActive,
+    };
   }
 
   toResponseDto(lang: "es" | "en" = "es"): ProductResponseDto {

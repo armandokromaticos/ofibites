@@ -15,6 +15,11 @@ import { MoodGalleryModule } from "./modules/mood-gallery/mood-gallery.module";
 import { TagsModule } from "./modules/tags/tags.module";
 import { SectionsModule } from "./modules/sections/sections.module";
 import { AgencyCardsModule } from "./modules/agency-cards/agency-cards.module";
+import { CompaniesModule } from "./modules/companies/companies.module";
+import { BranchesModule } from "./modules/branches/branches.module";
+import { DepartmentsModule } from "./modules/departments/departments.module";
+import { CompanyAddressesModule } from "./modules/company-addresses/company-addresses.module";
+import { CompanyMembersModule } from "./modules/company-members/company-members.module";
 
 @Module({
   imports: [
@@ -31,6 +36,11 @@ import { AgencyCardsModule } from "./modules/agency-cards/agency-cards.module";
     TagsModule,
     SectionsModule,
     AgencyCardsModule,
+    CompaniesModule,
+    BranchesModule,
+    DepartmentsModule,
+    CompanyAddressesModule,
+    CompanyMembersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

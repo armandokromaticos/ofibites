@@ -13,19 +13,22 @@ datasource db {
 // ============================================
 
 model User {
-  id        String   @id @default(uuid())
-  authId    String?  @unique @map("auth_id")
-  email     String   @unique
+  id        String    @id @default(uuid())
+  authId    String?   @unique @map("auth_id")
+  email     String    @unique
   name      String
   phone     String?
   birthDate DateTime? @map("birth_date") @db.Date
-  role      Role     @default(CLIENT)
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  role      Role      @default(CLIENT)
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
-  orders       Order[]
-  couponUsages CouponUsage[]
+  orders         Order[]         @relation("OrderUser")
+  createdOrders  Order[]         @relation("OrderCreatedBy")
+  couponUsages   CouponUsage[]
+  memberships    CompanyMember[]
+  kamAssignments CompanyKam[]
 
   @@map("users")
 }
@@ -35,6 +38,7 @@ enum Role {
   OPS_ADMIN
   FINANCE_ADMIN
   KAM
+  OPERATOR
   CLIENT
 }
 
@@ -78,7 +82,7 @@ model ProductSize {
   isDefault     Boolean @default(false) @map("is_default")
   isActive      Boolean @default(true) @map("is_active")
 
-  product            Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product            Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
   orderItems         OrderItem[]
   modifierSizePrices ModifierSizePrice[]
 
@@ -244,11 +248,11 @@ model Order {
   id                String        @id @default(uuid())
   userId            String?       @map("user_id")
   couponId          String?       @map("coupon_id")
-  companyId         String?       @map("company_id")
+  companyId         String        @map("company_id")
   branchId          String?       @map("branch_id")
   departmentId      String?       @map("department_id")
-  createdById       String?       @map("created_by_id")
-  deliveryAddressId String?       @map("delivery_address_id")
+  createdById       String        @map("created_by_id")
+  deliveryAddressId String        @map("delivery_address_id")
   deliveryDate      DateTime?     @map("delivery_date") @db.Date
   deliveryTime      String?       @map("delivery_time")
   notes             String?
@@ -260,15 +264,158 @@ model Order {
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
 
-  user        User?         @relation(fields: [userId], references: [id])
-  coupon      Coupon?       @relation(fields: [couponId], references: [id])
-  items       OrderItem[]
-  couponUsage CouponUsage?
+  user            User?          @relation("OrderUser", fields: [userId], references: [id])
+  coupon          Coupon?        @relation(fields: [couponId], references: [id])
+  company         Company        @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  branch          Branch?        @relation(fields: [companyId, branchId], references: [companyId, id], onDelete: Restrict)
+  department      Department?    @relation(fields: [companyId, departmentId], references: [companyId, id], onDelete: Restrict)
+  createdBy       User           @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  deliveryAddress CompanyAddress @relation(fields: [companyId, deliveryAddressId], references: [companyId, id], onDelete: Restrict)
+  items           OrderItem[]
+  couponUsage     CouponUsage?
 
   @@index([userId])
   @@index([companyId])
   @@index([createdById])
+  @@index([branchId])
+  @@index([departmentId])
+  @@index([deliveryAddressId])
   @@map("orders")
+}
+
+// ============================================
+// MULTI-TENANT (Companies, Branches, Departments, Members)
+// ============================================
+
+enum CompanyRole {
+  COMPANY_ADMIN
+  COMPANY_BUYER
+  COMPANY_FINANCE
+  COMPANY_APPROVER
+}
+
+enum PaymentTerm {
+  CASH
+  CREDIT_15
+  CREDIT_30
+}
+
+model Company {
+  id          String      @id @default(uuid())
+  legalName   String      @map("legal_name")
+  taxId       String      @unique @map("tax_id")
+  email       String?
+  phone       String?
+  paymentTerm PaymentTerm @default(CASH) @map("payment_term")
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  branches       Branch[]
+  departments    Department[]
+  addresses      CompanyAddress[]
+  members        CompanyMember[]
+  kamAssignments CompanyKam[]
+  orders         Order[]
+
+  @@map("companies")
+}
+
+model Branch {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  members CompanyMember[]
+  orders  Order[]
+
+  @@unique([companyId, id])
+  @@index([companyId])
+  @@map("branches")
+}
+
+model Department {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  members CompanyMember[]
+  orders  Order[]
+
+  @@unique([companyId, id])
+  @@index([companyId])
+  @@map("departments")
+}
+
+model CompanyAddress {
+  id         String   @id @default(uuid())
+  companyId  String   @map("company_id")
+  label      String
+  line1      String
+  line2      String?
+  reference  String?
+  city       String
+  state      String?
+  country    String
+  zip        String?
+  isBilling  Boolean  @default(false) @map("is_billing")
+  isShipping Boolean  @default(true) @map("is_shipping")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  orders  Order[]
+
+  @@unique([companyId, id])
+  @@index([companyId])
+  @@map("company_addresses")
+}
+
+model CompanyMember {
+  id             String      @id @default(uuid())
+  userId         String      @map("user_id")
+  companyId      String      @map("company_id")
+  role           CompanyRole
+  position       String?
+  branchId       String?     @map("branch_id")
+  departmentId   String?     @map("department_id")
+  canPayInvoices Boolean     @default(false) @map("can_pay_invoices")
+  isActive       Boolean     @default(true) @map("is_active")
+  lastSeenAt     DateTime?   @map("last_seen_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  branch     Branch?     @relation(fields: [companyId, branchId], references: [companyId, id])
+  department Department? @relation(fields: [companyId, departmentId], references: [companyId, id])
+
+  @@unique([userId, companyId])
+  @@index([companyId])
+  @@index([branchId])
+  @@index([departmentId])
+  @@map("company_members")
+}
+
+model CompanyKam {
+  companyId  String   @map("company_id")
+  userId     String   @map("user_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, userId])
+  @@index([userId])
+  @@map("company_kam")
 }
 
 model OrderItem {
@@ -281,10 +428,10 @@ model OrderItem {
   unitPrice     Decimal @map("unit_price") @db.Decimal(10, 2)
   subtotal      Decimal @db.Decimal(10, 2)
 
-  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
-  productSize ProductSize? @relation(fields: [productSizeId], references: [id], onDelete: Restrict)
-  combo       Combo?       @relation(fields: [comboId], references: [id], onDelete: Restrict)
+  order       Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product             @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productSize ProductSize?        @relation(fields: [productSizeId], references: [id], onDelete: Restrict)
+  combo       Combo?              @relation(fields: [comboId], references: [id], onDelete: Restrict)
   modifiers   OrderItemModifier[]
 
   @@index([orderId])

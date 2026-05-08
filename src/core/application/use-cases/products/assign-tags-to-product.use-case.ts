@@ -17,7 +17,9 @@ export class AssignTagsToProductUseCase {
   ) {}
 
   async execute(productId: string, tagIds: string[]): Promise<ProductEntity> {
-    const existing = await this.productRepository.findById(productId);
+    const existing = await this.productRepository.findUnique({
+      where: { id: productId },
+    });
     if (!existing) {
       throw new NotFoundException(`Product with id ${productId} not found`);
     }

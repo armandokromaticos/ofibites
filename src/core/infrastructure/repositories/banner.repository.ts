@@ -1,33 +1,54 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma/prisma.service";
 import { IBannerRepository } from "../../domain/repositories/banner.repository.interface";
-import {
-  BannerEntity,
-  UpdateBannerParams,
-} from "../../domain/entities/banner.entity";
+import { BannerEntity } from "../../domain/entities/banner.entity";
 
 @Injectable()
 export class BannerRepository implements IBannerRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(entity: BannerEntity): Promise<BannerEntity> {
-    const data = entity.toPrismaCreate();
-    const banner = await this.prisma.banner.create({ data });
+    const banner = await this.prisma.banner.create({
+      data: entity.toPrismaCreate(),
+    });
     return BannerEntity.fromPrisma(banner);
   }
 
-  async findById(id: string): Promise<BannerEntity | null> {
-    const banner = await this.prisma.banner.findUnique({ where: { id } });
+  async findUnique(
+    args: Prisma.BannerFindUniqueArgs,
+  ): Promise<BannerEntity | null> {
+    const banner = await this.prisma.banner.findUnique(args);
     return banner ? BannerEntity.fromPrisma(banner) : null;
   }
 
-  async findAll(section?: string): Promise<BannerEntity[]> {
-    const where = section ? { section } : {};
-    const banners = await this.prisma.banner.findMany({
-      where,
-      orderBy: { order: "asc" },
-    });
-    return banners.map((banner) => BannerEntity.fromPrisma(banner));
+  async findMany(
+    args?: Prisma.BannerFindManyArgs,
+  ): Promise<{ data: BannerEntity[]; total?: number }> {
+    const rows = await this.prisma.banner.findMany(args);
+    const data = rows.map((row) => BannerEntity.fromPrisma(row));
+
+    const hasPagination =
+      typeof args?.skip === "number" || typeof args?.take === "number";
+    if (hasPagination) {
+      const total = await this.prisma.banner.count({ where: args?.where });
+      return { data, total };
+    }
+    return { data };
+  }
+
+  async update(args: Prisma.BannerUpdateArgs): Promise<BannerEntity> {
+    const banner = await this.prisma.banner.update(args);
+    return BannerEntity.fromPrisma(banner);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.banner.delete({ where: { id } });
+  }
+
+  async exists(args: Prisma.BannerCountArgs): Promise<boolean> {
+    const count = await this.prisma.banner.count(args);
+    return count > 0;
   }
 
   async findAllActive(section?: string): Promise<BannerEntity[]> {
@@ -46,17 +67,5 @@ export class BannerRepository implements IBannerRepository {
       orderBy: { order: "asc" },
     });
     return banners.map((banner) => BannerEntity.fromPrisma(banner));
-  }
-
-  async update(id: string, data: UpdateBannerParams): Promise<BannerEntity> {
-    const banner = await this.prisma.banner.update({
-      where: { id },
-      data,
-    });
-    return BannerEntity.fromPrisma(banner);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.prisma.banner.delete({ where: { id } });
   }
 }

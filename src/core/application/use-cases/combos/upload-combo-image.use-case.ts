@@ -8,7 +8,10 @@ import {
 import { randomUUID } from "crypto";
 import { extname } from "node:path";
 import type { IComboRepository } from "../../../domain/repositories/combo.repository.interface";
-import { COMBO_REPOSITORY } from "../../../domain/repositories/combo.repository.interface";
+import {
+  COMBO_FULL_INCLUDE,
+  COMBO_REPOSITORY,
+} from "../../../domain/repositories/combo.repository.interface";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
 import { ComboEntity } from "../../../domain/entities/combo.entity";
 
@@ -31,7 +34,9 @@ export class UploadComboImageUseCase {
   ) {}
 
   async execute(comboId: string, file: UploadFileInput): Promise<ComboEntity> {
-    const existing = await this.comboRepository.findById(comboId);
+    const existing = await this.comboRepository.findUnique({
+      where: { id: comboId },
+    });
     if (!existing) {
       throw new NotFoundException(`Combo with id ${comboId} not found`);
     }
@@ -80,8 +85,10 @@ export class UploadComboImageUseCase {
       file.mimetype,
     );
 
-    return this.comboRepository.update(comboId, {
-      image: publicUrl,
-    } as Partial<ComboEntity>);
+    return this.comboRepository.update({
+      where: { id: comboId },
+      data: { image: publicUrl },
+      include: COMBO_FULL_INCLUDE,
+    });
   }
 }

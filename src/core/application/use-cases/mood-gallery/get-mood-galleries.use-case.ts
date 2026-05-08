@@ -15,8 +15,13 @@ export class GetMoodGalleriesUseCase {
     activeOnly?: boolean,
   ): Promise<MoodGalleryEntity[]> {
     if (activeOnly) {
-      return await this.moodGalleryRepository.findAllActive(section);
+      return this.moodGalleryRepository.findAllActive(section);
     }
-    return await this.moodGalleryRepository.findAll(section);
+    const where = section ? { section } : undefined;
+    const { data } = await this.moodGalleryRepository.findMany({
+      where,
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+    });
+    return data;
   }
 }

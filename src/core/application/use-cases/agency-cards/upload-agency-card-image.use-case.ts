@@ -34,7 +34,9 @@ export class UploadAgencyCardImageUseCase {
     cardId: string,
     file: UploadFileInput,
   ): Promise<AgencyCardEntity> {
-    const existing = await this.repository.findById(cardId);
+    const existing = await this.repository.findUnique({
+      where: { id: cardId },
+    });
     if (!existing) {
       throw new NotFoundException(`Agency card with id ${cardId} not found`);
     }
@@ -69,8 +71,9 @@ export class UploadAgencyCardImageUseCase {
       file.mimetype,
     );
 
-    const updated = await this.repository.update(cardId, {
-      imageUrl: publicUrl,
+    const updated = await this.repository.update({
+      where: { id: cardId },
+      data: { imageUrl: publicUrl },
     });
 
     if (existing.imageUrl) {

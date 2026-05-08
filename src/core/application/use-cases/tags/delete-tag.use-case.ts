@@ -10,7 +10,7 @@ export class DeleteTagUseCase {
   ) {}
 
   async execute(id: string): Promise<void> {
-    const existing = await this.tagRepository.findById(id);
+    const existing = await this.tagRepository.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Tag with id ${id} not found`);
     }

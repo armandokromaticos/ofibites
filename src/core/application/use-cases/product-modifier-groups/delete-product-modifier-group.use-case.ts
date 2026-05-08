@@ -19,12 +19,16 @@ export class DeleteProductModifierGroupUseCase {
   ) {}
 
   async execute(productId: string, groupId: string): Promise<void> {
-    const product = await this.productRepository.findById(productId);
+    const product = await this.productRepository.findUnique({
+      where: { id: productId },
+    });
     if (!product) {
       throw new NotFoundException(`Product with id ${productId} not found`);
     }
 
-    const group = await this.groupRepository.findById(groupId);
+    const group = await this.groupRepository.findUnique({
+      where: { id: groupId },
+    });
     if (!group || group.productId !== productId) {
       throw new NotFoundException(
         `Modifier group with id ${groupId} not found for product ${productId}`,
