@@ -2,13 +2,15 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsBoolean,
   IsEmail,
-  IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
+  ValidateIf,
 } from "class-validator";
-import { PaymentTerm } from "../../../domain/enums/payment-term.enum";
 
 export class CreateCompanyDto {
   @ApiProperty({ example: "Ofibites C.A." })
@@ -34,10 +36,18 @@ export class CreateCompanyDto {
   @MaxLength(50)
   phone?: string;
 
-  @ApiPropertyOptional({ enum: PaymentTerm, example: PaymentTerm.CASH })
-  @IsOptional()
-  @IsEnum(PaymentTerm)
-  paymentTerm?: PaymentTerm;
+  @ApiPropertyOptional({
+    example: 30,
+    description:
+      "Plazo de crédito en días (0 = contado). Cliente nuevo arranca en 0–5 y sube según historial.",
+    minimum: 0,
+    maximum: 180,
+  })
+  @ValidateIf((dto: CreateCompanyDto) => dto.creditDays !== undefined)
+  @IsInt()
+  @Min(0)
+  @Max(180)
+  creditDays?: number;
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()

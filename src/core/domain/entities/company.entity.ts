@@ -1,12 +1,11 @@
 import { Company as PrismaCompany, Prisma } from "@prisma/client";
-import { PaymentTerm } from "../enums/payment-term.enum";
 
 export interface CreateCompanyParams {
   legalName: string;
   taxId: string;
   email?: string | null;
   phone?: string | null;
-  paymentTerm?: PaymentTerm;
+  creditDays?: number;
   isActive?: boolean;
 }
 
@@ -16,7 +15,7 @@ export class CompanyEntity {
   taxId: string;
   email: string | null;
   phone: string | null;
-  paymentTerm: PaymentTerm;
+  creditDays: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -28,12 +27,7 @@ export class CompanyEntity {
     entity.taxId = prisma.taxId;
     entity.email = prisma.email;
     entity.phone = prisma.phone;
-    if (
-      !Object.values(PaymentTerm).includes(prisma.paymentTerm as PaymentTerm)
-    ) {
-      throw new Error(`Invalid paymentTerm value: ${prisma.paymentTerm}`);
-    }
-    entity.paymentTerm = prisma.paymentTerm as PaymentTerm;
+    entity.creditDays = prisma.creditDays;
     entity.isActive = prisma.isActive;
     entity.createdAt = prisma.createdAt;
     entity.updatedAt = prisma.updatedAt;
@@ -47,7 +41,7 @@ export class CompanyEntity {
     entity.taxId = params.taxId.trim();
     entity.email = params.email ?? null;
     entity.phone = params.phone ?? null;
-    entity.paymentTerm = params.paymentTerm ?? PaymentTerm.CASH;
+    entity.creditDays = params.creditDays ?? 0;
     entity.isActive = params.isActive ?? true;
     entity.createdAt = new Date();
     entity.updatedAt = new Date();
@@ -60,7 +54,7 @@ export class CompanyEntity {
       taxId: this.taxId,
       email: this.email,
       phone: this.phone,
-      paymentTerm: this.paymentTerm,
+      creditDays: this.creditDays,
       isActive: this.isActive,
     };
   }

@@ -294,22 +294,16 @@ enum CompanyRole {
   COMPANY_APPROVER
 }
 
-enum PaymentTerm {
-  CASH
-  CREDIT_15
-  CREDIT_30
-}
-
 model Company {
-  id          String      @id @default(uuid())
-  legalName   String      @map("legal_name")
-  taxId       String      @unique @map("tax_id")
-  email       String?
-  phone       String?
-  paymentTerm PaymentTerm @default(CASH) @map("payment_term")
-  isActive    Boolean     @default(true) @map("is_active")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
+  id         String   @id @default(uuid())
+  legalName  String   @map("legal_name")
+  taxId      String   @unique @map("tax_id")
+  email      String?
+  phone      String?
+  creditDays Int      @default(0) @map("credit_days")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   branches       Branch[]
   departments    Department[]
