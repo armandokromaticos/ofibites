@@ -12,8 +12,8 @@ import { GetMeUseCase } from "../../core/application/use-cases/auth/get-me.use-c
 import { AuthController } from "./controllers/auth.controller";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { RolesGuard } from "./guards/roles.guard";
-import { OptionalJwtAuthGuard } from "./guards/optional-jwt-auth.guard";
 import { CompanyRoleGuard } from "./guards/company-role.guard";
+import { PlatformOrCompanyRoleGuard } from "./guards/platform-or-company-role.guard";
 
 @Module({
   controllers: [AuthController],
@@ -36,14 +36,14 @@ import { CompanyRoleGuard } from "./guards/company-role.guard";
     GetMeUseCase,
     JwtAuthGuard,
     RolesGuard,
-    OptionalJwtAuthGuard,
     CompanyRoleGuard,
+    PlatformOrCompanyRoleGuard,
   ],
   exports: [
     JwtAuthGuard,
     RolesGuard,
-    OptionalJwtAuthGuard,
     CompanyRoleGuard,
+    PlatformOrCompanyRoleGuard,
     USER_REPOSITORY,
     COMPANY_MEMBER_REPOSITORY,
     COMPANY_KAM_REPOSITORY,
