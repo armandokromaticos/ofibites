@@ -122,4 +122,21 @@ export class CompanyMemberRepository implements ICompanyMemberRepository {
     });
     return rows.map((row) => CompanyMemberEntity.fromPrisma(row));
   }
+
+  async touchLastSeenIfStale(
+    authId: string,
+    companyId: string,
+    debounceMs: number,
+  ): Promise<void> {
+    const threshold = new Date(Date.now() - debounceMs);
+    await this.prisma.companyMember.updateMany({
+      where: {
+        companyId,
+        isActive: true,
+        user: { authId },
+        OR: [{ lastSeenAt: null }, { lastSeenAt: { lt: threshold } }],
+      },
+      data: { lastSeenAt: new Date() },
+    });
+  }
 }
