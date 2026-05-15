@@ -6,9 +6,11 @@ import {
   IsDateString,
   IsOptional,
   IsBoolean,
+  IsUUID,
   Min,
   Max,
   MinLength,
+  ValidateIf,
 } from "class-validator";
 
 export class UpdateCouponDto {
@@ -51,4 +53,14 @@ export class UpdateCouponDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      "Empresa a la que se restringe el cupon. Pasar null para volverlo global.",
+    nullable: true,
+  })
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsUUID()
+  companyId?: string | null;
 }

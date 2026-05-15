@@ -193,6 +193,11 @@ export class CreateOrderUseCase {
       if (!coupon) {
         throw new BadRequestException(`Coupon "${dto.couponCode}" not found`);
       }
+      if (coupon.companyId && coupon.companyId !== dto.companyId) {
+        throw new BadRequestException(
+          `Coupon "${dto.couponCode}" no aplica a esta empresa`,
+        );
+      }
       if (!coupon.isValid()) {
         throw new BadRequestException(
           "Coupon is not valid (inactive, expired, or no uses remaining)",

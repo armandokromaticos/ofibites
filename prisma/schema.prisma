@@ -196,12 +196,15 @@ model Coupon {
   usedQuantity    Int        @default(0) @map("used_quantity")
   expiresAt       DateTime   @map("expires_at")
   isActive        Boolean    @default(true) @map("is_active")
+  companyId       String?    @map("company_id")
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
 
-  usages CouponUsage[]
-  orders Order[]
+  company Company?      @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  usages  CouponUsage[]
+  orders  Order[]
 
+  @@index([companyId])
   @@map("coupons")
 }
 
@@ -311,6 +314,7 @@ model Company {
   members        CompanyMember[]
   kamAssignments CompanyKam[]
   orders         Order[]
+  coupons        Coupon[]
 
   @@map("companies")
 }

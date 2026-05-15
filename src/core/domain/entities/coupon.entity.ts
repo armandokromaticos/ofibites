@@ -31,6 +31,7 @@ interface CouponProps {
   usedQuantity: number;
   expiresAt: Date;
   isActive: boolean;
+  companyId: string | null;
   createdAt: Date;
   updatedAt: Date;
   usages?: CouponUsageInfo[];
@@ -45,6 +46,7 @@ export interface CreateCouponParams {
   totalQuantity: number;
   expiresAt: Date;
   isActive: boolean;
+  companyId?: string | null;
 }
 
 export class CouponEntity {
@@ -83,6 +85,9 @@ export class CouponEntity {
   }
   get isActive(): boolean {
     return this.props.isActive;
+  }
+  get companyId(): string | null {
+    return this.props.companyId;
   }
   get createdAt(): Date {
     return this.props.createdAt;
@@ -125,6 +130,7 @@ export class CouponEntity {
       usedQuantity: 0,
       expiresAt: params.expiresAt,
       isActive: params.isActive,
+      companyId: params.companyId ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -142,6 +148,7 @@ export class CouponEntity {
       usedQuantity: prisma.usedQuantity,
       expiresAt: prisma.expiresAt,
       isActive: prisma.isActive,
+      companyId: prisma.companyId ?? null,
       createdAt: prisma.createdAt,
       updatedAt: prisma.updatedAt,
     };
@@ -169,6 +176,9 @@ export class CouponEntity {
       usedQuantity: this.props.usedQuantity,
       expiresAt: this.props.expiresAt,
       isActive: this.props.isActive,
+      ...(this.props.companyId
+        ? { company: { connect: { id: this.props.companyId } } }
+        : {}),
     };
   }
 
@@ -191,6 +201,7 @@ export class CouponEntity {
     dto.usedQuantity = this.props.usedQuantity;
     dto.expiresAt = this.props.expiresAt;
     dto.isActive = this.props.isActive;
+    dto.companyId = this.props.companyId;
     dto.createdAt = this.props.createdAt;
     dto.updatedAt = this.props.updatedAt;
 

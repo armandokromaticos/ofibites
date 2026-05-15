@@ -49,6 +49,9 @@ export class CouponResponseDto {
   @ApiProperty()
   isActive: boolean;
 
+  @ApiPropertyOptional({ nullable: true, type: String })
+  companyId: string | null;
+
   @ApiProperty()
   createdAt: Date;
 
