@@ -12,9 +12,12 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Role } from "../../../core/domain/enums/role.enum";
+import { CompanyRole } from "../../../core/domain/enums/company-role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
+import { PlatformOrCompanyRoleGuard } from "../../auth/guards/platform-or-company-role.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
+import { PlatformOrCompanyRole } from "../../auth/decorators/platform-or-company-role.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateDepartmentDto } from "../../../core/application/dto/departments/create-department.dto";
 import { UpdateDepartmentDto } from "../../../core/application/dto/departments/update-department.dto";
@@ -28,7 +31,7 @@ import { DeleteDepartmentUseCase } from "../../../core/application/use-cases/dep
 @ApiTags("Departments")
 @ApiBearerAuth()
 @Controller("companies/:companyId/departments")
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PlatformOrCompanyRoleGuard)
 export class DepartmentsController {
   constructor(
     private readonly createDepartmentUseCase: CreateDepartmentUseCase,
@@ -39,7 +42,10 @@ export class DepartmentsController {
   ) {}
 
   @Post()
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
+  @PlatformOrCompanyRole({
+    platformRoles: [Role.SUPER_ADMIN, Role.OPS_ADMIN],
+    companyRoles: [CompanyRole.COMPANY_ADMIN],
+  })
   @ApiOperation({ summary: "Crear departamento" })
   async create(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -53,7 +59,13 @@ export class DepartmentsController {
   }
 
   @Get()
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.FINANCE_ADMIN, Role.KAM)
+  @Roles(
+    Role.SUPER_ADMIN,
+    Role.OPS_ADMIN,
+    Role.FINANCE_ADMIN,
+    Role.KAM,
+    Role.CLIENT,
+  )
   @ApiOperation({ summary: "Listar departamentos de la empresa" })
   async findAll(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -68,7 +80,13 @@ export class DepartmentsController {
   }
 
   @Get(":id")
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.FINANCE_ADMIN, Role.KAM)
+  @Roles(
+    Role.SUPER_ADMIN,
+    Role.OPS_ADMIN,
+    Role.FINANCE_ADMIN,
+    Role.KAM,
+    Role.CLIENT,
+  )
   @ApiOperation({ summary: "Obtener departamento" })
   async findOne(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -85,7 +103,10 @@ export class DepartmentsController {
   }
 
   @Patch(":id")
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
+  @PlatformOrCompanyRole({
+    platformRoles: [Role.SUPER_ADMIN, Role.OPS_ADMIN],
+    companyRoles: [CompanyRole.COMPANY_ADMIN],
+  })
   @ApiOperation({ summary: "Actualizar departamento" })
   async update(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -102,7 +123,10 @@ export class DepartmentsController {
 
   @Delete(":id")
   @HttpCode(204)
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
+  @PlatformOrCompanyRole({
+    platformRoles: [Role.SUPER_ADMIN, Role.OPS_ADMIN],
+    companyRoles: [CompanyRole.COMPANY_ADMIN],
+  })
   @ApiOperation({ summary: "Eliminar departamento" })
   async remove(
     @Param("companyId", ParseUUIDPipe) companyId: string,

@@ -12,9 +12,12 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Role } from "../../../core/domain/enums/role.enum";
+import { CompanyRole } from "../../../core/domain/enums/company-role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../../auth/guards/roles.guard";
+import { PlatformOrCompanyRoleGuard } from "../../auth/guards/platform-or-company-role.guard";
 import { Roles } from "../../auth/decorators/roles.decorator";
+import { PlatformOrCompanyRole } from "../../auth/decorators/platform-or-company-role.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateBranchDto } from "../../../core/application/dto/branches/create-branch.dto";
 import { UpdateBranchDto } from "../../../core/application/dto/branches/update-branch.dto";
@@ -28,7 +31,7 @@ import { DeleteBranchUseCase } from "../../../core/application/use-cases/branche
 @ApiTags("Branches")
 @ApiBearerAuth()
 @Controller("companies/:companyId/branches")
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PlatformOrCompanyRoleGuard)
 export class BranchesController {
   constructor(
     private readonly createBranchUseCase: CreateBranchUseCase,
@@ -39,7 +42,10 @@ export class BranchesController {
   ) {}
 
   @Post()
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
+  @PlatformOrCompanyRole({
+    platformRoles: [Role.SUPER_ADMIN, Role.OPS_ADMIN],
+    companyRoles: [CompanyRole.COMPANY_ADMIN],
+  })
   @ApiOperation({ summary: "Crear sede" })
   async create(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -50,7 +56,13 @@ export class BranchesController {
   }
 
   @Get()
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.FINANCE_ADMIN, Role.KAM)
+  @Roles(
+    Role.SUPER_ADMIN,
+    Role.OPS_ADMIN,
+    Role.FINANCE_ADMIN,
+    Role.KAM,
+    Role.CLIENT,
+  )
   @ApiOperation({ summary: "Listar sedes de la empresa" })
   async findAll(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -65,7 +77,13 @@ export class BranchesController {
   }
 
   @Get(":id")
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.FINANCE_ADMIN, Role.KAM)
+  @Roles(
+    Role.SUPER_ADMIN,
+    Role.OPS_ADMIN,
+    Role.FINANCE_ADMIN,
+    Role.KAM,
+    Role.CLIENT,
+  )
   @ApiOperation({ summary: "Obtener sede" })
   async findOne(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -82,7 +100,10 @@ export class BranchesController {
   }
 
   @Patch(":id")
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
+  @PlatformOrCompanyRole({
+    platformRoles: [Role.SUPER_ADMIN, Role.OPS_ADMIN],
+    companyRoles: [CompanyRole.COMPANY_ADMIN],
+  })
   @ApiOperation({ summary: "Actualizar sede" })
   async update(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -95,7 +116,10 @@ export class BranchesController {
 
   @Delete(":id")
   @HttpCode(204)
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
+  @PlatformOrCompanyRole({
+    platformRoles: [Role.SUPER_ADMIN, Role.OPS_ADMIN],
+    companyRoles: [CompanyRole.COMPANY_ADMIN],
+  })
   @ApiOperation({ summary: "Eliminar sede" })
   async remove(
     @Param("companyId", ParseUUIDPipe) companyId: string,
