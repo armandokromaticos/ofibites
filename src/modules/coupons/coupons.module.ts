@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
+import { CompaniesModule } from "../companies/companies.module";
 import { CouponsController } from "./controllers/coupons.controller";
 import { COUPON_REPOSITORY } from "../../core/domain/repositories/coupon.repository.interface";
 import { CouponRepository } from "../../core/infrastructure/repositories/coupon.repository";
@@ -10,7 +11,7 @@ import { UpdateCouponUseCase } from "../../core/application/use-cases/coupons/up
 import { ToggleCouponUseCase } from "../../core/application/use-cases/coupons/toggle-coupon.use-case";
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, CompaniesModule],
   controllers: [CouponsController],
   providers: [
     { provide: COUPON_REPOSITORY, useClass: CouponRepository },

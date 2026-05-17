@@ -7,6 +7,7 @@ import {
   IsEnum,
   IsOptional,
   IsBoolean,
+  IsUUID,
   Min,
   Max,
   MinLength,
@@ -61,4 +62,13 @@ export class CreateCouponDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean = true;
+
+  @ApiPropertyOptional({
+    description:
+      "Si se especifica, el cupon solo aplica a esa empresa. Null = cupon global.",
+    nullable: true,
+  })
+  @IsOptional()
+  @IsUUID()
+  companyId?: string;
 }

@@ -10,6 +10,8 @@ import {
   COUPON_FULL_INCLUDE,
   COUPON_REPOSITORY,
 } from "../../../domain/repositories/coupon.repository.interface";
+import type { ICompanyRepository } from "../../../domain/repositories/company.repository.interface";
+import { COMPANY_REPOSITORY } from "../../../domain/repositories/company.repository.interface";
 import { UpdateCouponDto } from "../../dto/coupons/update-coupon.dto";
 import { CouponEntity } from "../../../domain/entities/coupon.entity";
 
@@ -18,6 +20,8 @@ export class UpdateCouponUseCase {
   constructor(
     @Inject(COUPON_REPOSITORY)
     private readonly couponRepository: ICouponRepository,
+    @Inject(COMPANY_REPOSITORY)
+    private readonly companyRepository: ICompanyRepository,
   ) {}
 
   async execute(id: string, dto: UpdateCouponDto): Promise<CouponEntity> {
@@ -50,6 +54,19 @@ export class UpdateCouponUseCase {
     if (dto.totalQuantity !== undefined) data.totalQuantity = dto.totalQuantity;
     if (dto.expiresAt !== undefined) data.expiresAt = new Date(dto.expiresAt);
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
+    if (dto.companyId !== undefined) {
+      if (dto.companyId === null) {
+        data.company = { disconnect: true };
+      } else {
+        const companyExists = await this.companyRepository.exists({
+          where: { id: dto.companyId },
+        });
+        if (!companyExists) {
+          throw new NotFoundException(`Company ${dto.companyId} not found`);
+        }
+        data.company = { connect: { id: dto.companyId } };
+      }
+    }
 
     return this.couponRepository.update({
       where: { id },
