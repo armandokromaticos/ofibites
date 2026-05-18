@@ -20,9 +20,11 @@ import { Roles } from "../../auth/decorators/roles.decorator";
 import { PlatformOrCompanyRole } from "../../auth/decorators/platform-or-company-role.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateCompanyMemberDto } from "../../../core/application/dto/company-members/create-company-member.dto";
+import { InviteCompanyMemberDto } from "../../../core/application/dto/company-members/invite-company-member.dto";
 import { UpdateCompanyMemberDto } from "../../../core/application/dto/company-members/update-company-member.dto";
 import { CompanyMemberResponseDto } from "../../../core/application/dto/company-members/company-member-response.dto";
 import { CreateCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/create-company-member.use-case";
+import { InviteCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/invite-company-member.use-case";
 import { GetCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/get-company-member.use-case";
 import { GetCompanyMembersUseCase } from "../../../core/application/use-cases/company-members/get-company-members.use-case";
 import { UpdateCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/update-company-member.use-case";
@@ -35,6 +37,7 @@ import { DeleteCompanyMemberUseCase } from "../../../core/application/use-cases/
 export class CompanyMembersController {
   constructor(
     private readonly createUseCase: CreateCompanyMemberUseCase,
+    private readonly inviteUseCase: InviteCompanyMemberUseCase,
     private readonly getUseCase: GetCompanyMemberUseCase,
     private readonly getAllUseCase: GetCompanyMembersUseCase,
     private readonly updateUseCase: UpdateCompanyMemberUseCase,
@@ -52,6 +55,23 @@ export class CompanyMembersController {
     @Body() dto: CreateCompanyMemberDto,
   ): Promise<CompanyMemberResponseDto> {
     const member = await this.createUseCase.execute(companyId, dto);
+    return CompanyMemberResponseDto.fromEntity(member);
+  }
+
+  @Post("invite")
+  @PlatformOrCompanyRole({
+    platformRoles: [Role.SUPER_ADMIN, Role.OPS_ADMIN],
+    companyRoles: [CompanyRole.COMPANY_ADMIN],
+  })
+  @ApiOperation({
+    summary:
+      "Invitar nuevo miembro (crea User + envia email via Supabase). 409 si el email ya existe.",
+  })
+  async invite(
+    @Param("companyId", ParseUUIDPipe) companyId: string,
+    @Body() dto: InviteCompanyMemberDto,
+  ): Promise<CompanyMemberResponseDto> {
+    const member = await this.inviteUseCase.execute(companyId, dto);
     return CompanyMemberResponseDto.fromEntity(member);
   }
 
