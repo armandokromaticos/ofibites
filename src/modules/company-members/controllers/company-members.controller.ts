@@ -10,7 +10,12 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { Role } from "../../../core/domain/enums/role.enum";
 import { CompanyRole } from "../../../core/domain/enums/company-role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
@@ -20,9 +25,11 @@ import { Roles } from "../../auth/decorators/roles.decorator";
 import { PlatformOrCompanyRole } from "../../auth/decorators/platform-or-company-role.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateCompanyMemberDto } from "../../../core/application/dto/company-members/create-company-member.dto";
+import { InviteCompanyMemberDto } from "../../../core/application/dto/company-members/invite-company-member.dto";
 import { UpdateCompanyMemberDto } from "../../../core/application/dto/company-members/update-company-member.dto";
 import { CompanyMemberResponseDto } from "../../../core/application/dto/company-members/company-member-response.dto";
 import { CreateCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/create-company-member.use-case";
+import { InviteCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/invite-company-member.use-case";
 import { GetCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/get-company-member.use-case";
 import { GetCompanyMembersUseCase } from "../../../core/application/use-cases/company-members/get-company-members.use-case";
 import { UpdateCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/update-company-member.use-case";
@@ -35,6 +42,7 @@ import { DeleteCompanyMemberUseCase } from "../../../core/application/use-cases/
 export class CompanyMembersController {
   constructor(
     private readonly createUseCase: CreateCompanyMemberUseCase,
+    private readonly inviteUseCase: InviteCompanyMemberUseCase,
     private readonly getUseCase: GetCompanyMemberUseCase,
     private readonly getAllUseCase: GetCompanyMembersUseCase,
     private readonly updateUseCase: UpdateCompanyMemberUseCase,
@@ -52,6 +60,43 @@ export class CompanyMembersController {
     @Body() dto: CreateCompanyMemberDto,
   ): Promise<CompanyMemberResponseDto> {
     const member = await this.createUseCase.execute(companyId, dto);
+    return CompanyMemberResponseDto.fromEntity(member);
+  }
+
+  @Post("invite")
+  @PlatformOrCompanyRole({
+    platformRoles: [Role.SUPER_ADMIN, Role.OPS_ADMIN],
+    companyRoles: [CompanyRole.COMPANY_ADMIN],
+  })
+  @ApiOperation({
+    summary:
+      "Invitar nuevo miembro (crea User + envia email via Supabase). 409 si el email ya existe.",
+  })
+  @ApiResponse({
+    status: 201,
+    description: "Miembro invitado. Supabase envió email de confirmación.",
+    type: CompanyMemberResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Validación fallida (branch/department de otra empresa, etc).",
+  })
+  @ApiResponse({ status: 404, description: "Company no encontrada." })
+  @ApiResponse({
+    status: 409,
+    description:
+      "El email ya existe en la plataforma. Usar POST /companies/:companyId/members con el userId existente.",
+  })
+  @ApiResponse({
+    status: 429,
+    description:
+      "Supabase rechazó el envío por límite de tasa (SMTP default). Reintentar o configurar SMTP custom.",
+  })
+  async invite(
+    @Param("companyId", ParseUUIDPipe) companyId: string,
+    @Body() dto: InviteCompanyMemberDto,
+  ): Promise<CompanyMemberResponseDto> {
+    const member = await this.inviteUseCase.execute(companyId, dto);
     return CompanyMemberResponseDto.fromEntity(member);
   }
 
