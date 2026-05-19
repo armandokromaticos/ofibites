@@ -91,8 +91,10 @@ export class InviteCompanyMemberUseCase {
     this.logger.log(`Invitando usuario ${email} a company ${companyId}`);
     const supabase = this.supabaseService.getAdmin();
 
+    const redirectTo = process.env.SUPABASE_INVITE_REDIRECT_URL?.trim();
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
       data: { name: dto.name },
+      ...(redirectTo ? { redirectTo } : {}),
     });
 
     if (error) {

@@ -10,7 +10,12 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { Role } from "../../../core/domain/enums/role.enum";
 import { CompanyRole } from "../../../core/domain/enums/company-role.enum";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
@@ -66,6 +71,26 @@ export class CompanyMembersController {
   @ApiOperation({
     summary:
       "Invitar nuevo miembro (crea User + envia email via Supabase). 409 si el email ya existe.",
+  })
+  @ApiResponse({
+    status: 201,
+    description: "Miembro invitado. Supabase envió email de confirmación.",
+    type: CompanyMemberResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Validación fallida (branch/department de otra empresa, etc).",
+  })
+  @ApiResponse({ status: 404, description: "Company no encontrada." })
+  @ApiResponse({
+    status: 409,
+    description:
+      "El email ya existe en la plataforma. Usar POST /companies/:companyId/members con el userId existente.",
+  })
+  @ApiResponse({
+    status: 429,
+    description:
+      "Supabase rechazó el envío por límite de tasa (SMTP default). Reintentar o configurar SMTP custom.",
   })
   async invite(
     @Param("companyId", ParseUUIDPipe) companyId: string,
