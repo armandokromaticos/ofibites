@@ -5,9 +5,7 @@ import { ICompanyRegistrationRequestRepository } from "../../domain/repositories
 import { CompanyRegistrationRequestEntity } from "../../domain/entities/company-registration-request.entity";
 
 @Injectable()
-export class CompanyRegistrationRequestRepository
-  implements ICompanyRegistrationRequestRepository
-{
+export class CompanyRegistrationRequestRepository implements ICompanyRegistrationRequestRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(
