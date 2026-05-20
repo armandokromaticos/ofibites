@@ -59,13 +59,7 @@ export class DepartmentsController {
   }
 
   @Get()
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
   @ApiOperation({ summary: "Listar departamentos de la empresa" })
   async findAll(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -80,13 +74,7 @@ export class DepartmentsController {
   }
 
   @Get(":id")
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
   @ApiOperation({ summary: "Obtener departamento" })
   async findOne(
     @Param("companyId", ParseUUIDPipe) companyId: string,

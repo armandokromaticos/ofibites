@@ -55,7 +55,7 @@ export class UsersController {
   @Get()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.FINANCE_ADMIN, Role.KAM)
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
   @ApiOperation({
     summary: "Listar usuarios (filtrado por empresa para KAM y admins)",
   })

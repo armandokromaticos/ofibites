@@ -4,15 +4,12 @@ import { ORDER_REPOSITORY } from "../../../domain/repositories/order.repository.
 import type { OrderVisibilityFilter } from "../../../domain/repositories/order.repository.interface";
 import type { ICompanyMemberRepository } from "../../../domain/repositories/company-member.repository.interface";
 import { COMPANY_MEMBER_REPOSITORY } from "../../../domain/repositories/company-member.repository.interface";
-import type { ICompanyKamRepository } from "../../../domain/repositories/company-kam.repository.interface";
-import { COMPANY_KAM_REPOSITORY } from "../../../domain/repositories/company-kam.repository.interface";
 import { OrderEntity } from "../../../domain/entities/order.entity";
 import { Role } from "../../../domain/enums/role.enum";
 
 const PLATFORM_FULL_ACCESS_ROLES: ReadonlySet<Role> = new Set([
   Role.SUPER_ADMIN,
   Role.OPS_ADMIN,
-  Role.FINANCE_ADMIN,
   Role.OPERATOR,
 ]);
 
@@ -23,8 +20,6 @@ export class GetOrdersUseCase {
     private readonly orderRepository: IOrderRepository,
     @Inject(COMPANY_MEMBER_REPOSITORY)
     private readonly companyMemberRepository: ICompanyMemberRepository,
-    @Inject(COMPANY_KAM_REPOSITORY)
-    private readonly companyKamRepository: ICompanyKamRepository,
   ) {}
 
   async execute(
@@ -54,12 +49,6 @@ export class GetOrdersUseCase {
       return { type: "all" };
     }
 
-    if (userRole === Role.KAM) {
-      const companyIds =
-        await this.companyKamRepository.findCompanyIdsByUserId(userId);
-      return { type: "byCompanies", companyIds };
-    }
-
     // Role.CLIENT (default)
     const companyIds =
       await this.companyMemberRepository.findActiveCompanyIdsByUserId(userId);
@@ -72,19 +61,6 @@ export class GetOrdersUseCase {
     companyId: string,
   ): Promise<void> {
     if (PLATFORM_FULL_ACCESS_ROLES.has(userRole)) {
-      return;
-    }
-
-    if (userRole === Role.KAM) {
-      const isAssigned = await this.companyKamRepository.isAssignedToCompany(
-        userId,
-        companyId,
-      );
-      if (!isAssigned) {
-        throw new ForbiddenException(
-          "No estás asignado como KAM de esta empresa",
-        );
-      }
       return;
     }
 

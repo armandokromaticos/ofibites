@@ -1,8 +1,6 @@
 export enum Role {
   SUPER_ADMIN = "SUPER_ADMIN",
   OPS_ADMIN = "OPS_ADMIN",
-  FINANCE_ADMIN = "FINANCE_ADMIN",
-  KAM = "KAM",
   OPERATOR = "OPERATOR",
   CLIENT = "CLIENT",
 }

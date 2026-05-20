@@ -39,7 +39,6 @@ import { Role } from "../../../domain/enums/role.enum";
 const PLATFORM_BYPASS_MEMBERSHIP_ROLES: ReadonlySet<Role> = new Set([
   Role.SUPER_ADMIN,
   Role.OPS_ADMIN,
-  Role.FINANCE_ADMIN,
 ]);
 
 @Injectable()

@@ -101,13 +101,7 @@ export class CompanyMembersController {
   }
 
   @Get()
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
   @ApiOperation({ summary: "Listar miembros de la empresa" })
   async findAll(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -122,13 +116,7 @@ export class CompanyMembersController {
   }
 
   @Get(":id")
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
   @ApiOperation({ summary: "Obtener miembro" })
   async findOne(
     @Param("companyId", ParseUUIDPipe) companyId: string,
