@@ -24,11 +24,12 @@ model User {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
 
-  orders         Order[]         @relation("OrderUser")
-  createdOrders  Order[]         @relation("OrderCreatedBy")
-  couponUsages   CouponUsage[]
-  memberships    CompanyMember[]
-  kamAssignments CompanyKam[]
+  orders                Order[]                      @relation("OrderUser")
+  createdOrders         Order[]                      @relation("OrderCreatedBy")
+  couponUsages          CouponUsage[]
+  memberships           CompanyMember[]
+  kamAssignments        CompanyKam[]
+  reviewedRegistrations CompanyRegistrationRequest[] @relation("ReviewedRegistrations")
 
   @@map("users")
 }
@@ -308,13 +309,14 @@ model Company {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  branches       Branch[]
-  departments    Department[]
-  addresses      CompanyAddress[]
-  members        CompanyMember[]
-  kamAssignments CompanyKam[]
-  orders         Order[]
-  coupons        Coupon[]
+  branches            Branch[]
+  departments         Department[]
+  addresses           CompanyAddress[]
+  members             CompanyMember[]
+  kamAssignments      CompanyKam[]
+  orders              Order[]
+  coupons             Coupon[]
+  registrationRequest CompanyRegistrationRequest?
 
   @@map("companies")
 }
@@ -414,6 +416,37 @@ model CompanyKam {
   @@id([companyId, userId])
   @@index([userId])
   @@map("company_kam")
+}
+
+enum RegistrationRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model CompanyRegistrationRequest {
+  id                String                    @id @default(uuid())
+  legalName         String                    @map("legal_name")
+  taxId             String                    @map("tax_id")
+  contactName       String                    @map("contact_name")
+  contactEmail      String                    @map("contact_email")
+  contactPhone      String                    @map("contact_phone")
+  employeeCount     Int?                      @map("employee_count")
+  status            RegistrationRequestStatus @default(PENDING)
+  rejectionReason   String?                   @map("rejection_reason")
+  reviewedAt        DateTime?                 @map("reviewed_at")
+  reviewedById      String?                   @map("reviewed_by_id")
+  approvedCompanyId String?                   @unique @map("approved_company_id")
+  createdAt         DateTime                  @default(now()) @map("created_at")
+  updatedAt         DateTime                  @updatedAt @map("updated_at")
+
+  reviewedBy      User?    @relation("ReviewedRegistrations", fields: [reviewedById], references: [id], onDelete: SetNull)
+  approvedCompany Company? @relation(fields: [approvedCompanyId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([taxId])
+  @@index([contactEmail])
+  @@map("company_registration_requests")
 }
 
 model OrderItem {
