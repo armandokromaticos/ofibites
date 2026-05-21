@@ -1,11 +1,7 @@
 import { ForbiddenException } from "@nestjs/common";
 import type { ICompanyMemberRepository } from "../../domain/repositories/company-member.repository.interface";
 import { Role } from "../../domain/enums/role.enum";
-
-const PLATFORM_FULL_ACCESS_ROLES: ReadonlySet<Role> = new Set([
-  Role.SUPER_ADMIN,
-  Role.OPS_ADMIN,
-]);
+import { PLATFORM_FULL_ACCESS_ROLES } from "./platform-roles.constants";
 
 export interface CompanyAccessDeps {
   companyMemberRepository: ICompanyMemberRepository;

@@ -57,13 +57,13 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
   @ApiOperation({
-    summary: "Listar usuarios (filtrado por empresa para KAM y admins)",
+    summary: "Listar usuarios (admins; filtrable por empresa)",
   })
   @ApiQuery({
     name: "companyId",
     required: false,
     description:
-      "Filtra usuarios por empresa (devuelve los miembros activos). Requerido para KAM si quiere acotar.",
+      "Filtra por empresa devolviendo solo sus miembros activos. Solo accesible para SUPER_ADMIN y OPS_ADMIN.",
   })
   async findAll(
     @CurrentUser() caller: { id: string; role: Role },

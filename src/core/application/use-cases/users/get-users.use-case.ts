@@ -5,11 +5,7 @@ import type { ICompanyMemberRepository } from "../../../domain/repositories/comp
 import { COMPANY_MEMBER_REPOSITORY } from "../../../domain/repositories/company-member.repository.interface";
 import { UserEntity } from "../../../domain/entities/user.entity";
 import { Role } from "../../../domain/enums/role.enum";
-
-const PLATFORM_FULL_ACCESS_ROLES: ReadonlySet<Role> = new Set([
-  Role.SUPER_ADMIN,
-  Role.OPS_ADMIN,
-]);
+import { PLATFORM_FULL_ACCESS_ROLES } from "../../shared/platform-roles.constants";
 
 @Injectable()
 export class GetUsersUseCase {
