@@ -10,6 +10,7 @@ export interface CreateCompanyRegistrationRequestParams {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
+  position?: string | null;
   employeeCount?: number | null;
 }
 
@@ -20,6 +21,7 @@ export class CompanyRegistrationRequestEntity {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
+  position: string | null;
   employeeCount: number | null;
   status: RegistrationRequestStatus;
   rejectionReason: string | null;
@@ -39,6 +41,7 @@ export class CompanyRegistrationRequestEntity {
     entity.contactName = prisma.contactName;
     entity.contactEmail = prisma.contactEmail;
     entity.contactPhone = prisma.contactPhone;
+    entity.position = prisma.position;
     entity.employeeCount = prisma.employeeCount;
     if (
       !Object.values(RegistrationRequestStatus).includes(
@@ -69,6 +72,7 @@ export class CompanyRegistrationRequestEntity {
     entity.contactName = params.contactName.trim();
     entity.contactEmail = params.contactEmail.trim().toLowerCase();
     entity.contactPhone = params.contactPhone.trim();
+    entity.position = params.position?.trim() || null;
     entity.employeeCount = params.employeeCount ?? null;
     entity.status = RegistrationRequestStatus.PENDING;
     entity.rejectionReason = null;
@@ -87,6 +91,7 @@ export class CompanyRegistrationRequestEntity {
       contactName: this.contactName,
       contactEmail: this.contactEmail,
       contactPhone: this.contactPhone,
+      position: this.position,
       employeeCount: this.employeeCount,
       status: this.status,
     };

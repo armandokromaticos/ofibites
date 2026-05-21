@@ -39,6 +39,14 @@ export class UpdateCompanyUseCase {
     if (dto.phone !== undefined) {
       data.phone = dto.phone ? dto.phone.trim() : dto.phone;
     }
+    if (dto.fiscalName !== undefined) {
+      data.fiscalName = dto.fiscalName ? dto.fiscalName.trim() : dto.fiscalName;
+    }
+    if (dto.fiscalAddress !== undefined) {
+      data.fiscalAddress = dto.fiscalAddress
+        ? dto.fiscalAddress.trim()
+        : dto.fiscalAddress;
+    }
     if (dto.creditDays !== undefined) data.creditDays = dto.creditDays;
     if (dto.isActive !== undefined) data.isActive = dto.isActive;
 

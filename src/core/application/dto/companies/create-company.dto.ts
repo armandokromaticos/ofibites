@@ -37,6 +37,24 @@ export class CreateCompanyDto {
   phone?: string;
 
   @ApiPropertyOptional({
+    example: "Ofibites C.A.",
+    description: "Razón social legal (puede diferir de legalName comercial).",
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  fiscalName?: string;
+
+  @ApiPropertyOptional({
+    example: "Av. Principal, Torre X, Piso 4, Caracas",
+    description: "Dirección fiscal completa.",
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  fiscalAddress?: string;
+
+  @ApiPropertyOptional({
     example: 30,
     description:
       "Plazo de crédito en días (0 = contado). Cliente nuevo arranca en 0–5 y sube según historial.",

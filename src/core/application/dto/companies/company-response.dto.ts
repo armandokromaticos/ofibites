@@ -17,6 +17,20 @@ export class CompanyResponseDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   phone: string | null;
 
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    description: "Razón social legal (puede diferir de legalName comercial).",
+  })
+  fiscalName: string | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    description: "Dirección fiscal completa.",
+  })
+  fiscalAddress: string | null;
+
   @ApiProperty({
     example: 30,
     description:
@@ -40,6 +54,8 @@ export class CompanyResponseDto {
     dto.taxId = entity.taxId;
     dto.email = entity.email;
     dto.phone = entity.phone;
+    dto.fiscalName = entity.fiscalName;
+    dto.fiscalAddress = entity.fiscalAddress;
     dto.creditDays = entity.creditDays;
     dto.isActive = entity.isActive;
     dto.createdAt = entity.createdAt;
