@@ -8,17 +8,9 @@ import type { IOrderRepository } from "../../../domain/repositories/order.reposi
 import { ORDER_REPOSITORY } from "../../../domain/repositories/order.repository.interface";
 import type { ICompanyMemberRepository } from "../../../domain/repositories/company-member.repository.interface";
 import { COMPANY_MEMBER_REPOSITORY } from "../../../domain/repositories/company-member.repository.interface";
-import type { ICompanyKamRepository } from "../../../domain/repositories/company-kam.repository.interface";
-import { COMPANY_KAM_REPOSITORY } from "../../../domain/repositories/company-kam.repository.interface";
 import { OrderEntity } from "../../../domain/entities/order.entity";
 import { Role } from "../../../domain/enums/role.enum";
-
-const PLATFORM_FULL_ACCESS_ROLES: ReadonlySet<Role> = new Set([
-  Role.SUPER_ADMIN,
-  Role.OPS_ADMIN,
-  Role.FINANCE_ADMIN,
-  Role.OPERATOR,
-]);
+import { PLATFORM_ORDER_READ_ROLES } from "../../shared/platform-roles.constants";
 
 @Injectable()
 export class GetOrderUseCase {
@@ -27,8 +19,6 @@ export class GetOrderUseCase {
     private readonly orderRepository: IOrderRepository,
     @Inject(COMPANY_MEMBER_REPOSITORY)
     private readonly companyMemberRepository: ICompanyMemberRepository,
-    @Inject(COMPANY_KAM_REPOSITORY)
-    private readonly companyKamRepository: ICompanyKamRepository,
   ) {}
 
   async execute(
@@ -53,21 +43,7 @@ export class GetOrderUseCase {
     userId: string,
     userRole: Role,
   ): Promise<void> {
-    if (PLATFORM_FULL_ACCESS_ROLES.has(userRole)) {
-      return;
-    }
-
-    if (userRole === Role.KAM) {
-      if (!order.companyId) {
-        throw new ForbiddenException("No tienes acceso a esta orden");
-      }
-      const isAssigned = await this.companyKamRepository.isAssignedToCompany(
-        userId,
-        order.companyId,
-      );
-      if (!isAssigned) {
-        throw new ForbiddenException("No tienes acceso a esta orden");
-      }
+    if (PLATFORM_ORDER_READ_ROLES.has(userRole)) {
       return;
     }
 

@@ -3,16 +3,9 @@ import type { IUserRepository } from "../../../domain/repositories/user.reposito
 import { USER_REPOSITORY } from "../../../domain/repositories/user.repository.interface";
 import type { ICompanyMemberRepository } from "../../../domain/repositories/company-member.repository.interface";
 import { COMPANY_MEMBER_REPOSITORY } from "../../../domain/repositories/company-member.repository.interface";
-import type { ICompanyKamRepository } from "../../../domain/repositories/company-kam.repository.interface";
-import { COMPANY_KAM_REPOSITORY } from "../../../domain/repositories/company-kam.repository.interface";
 import { UserEntity } from "../../../domain/entities/user.entity";
 import { Role } from "../../../domain/enums/role.enum";
-
-const PLATFORM_FULL_ACCESS_ROLES: ReadonlySet<Role> = new Set([
-  Role.SUPER_ADMIN,
-  Role.OPS_ADMIN,
-  Role.FINANCE_ADMIN,
-]);
+import { PLATFORM_FULL_ACCESS_ROLES } from "../../shared/platform-roles.constants";
 
 @Injectable()
 export class GetUsersUseCase {
@@ -21,8 +14,6 @@ export class GetUsersUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(COMPANY_MEMBER_REPOSITORY)
     private readonly companyMemberRepository: ICompanyMemberRepository,
-    @Inject(COMPANY_KAM_REPOSITORY)
-    private readonly companyKamRepository: ICompanyKamRepository,
   ) {}
 
   async execute(
@@ -31,7 +22,11 @@ export class GetUsersUseCase {
     companyIdFilter?: string,
   ): Promise<UserEntity[]> {
     if (companyIdFilter) {
-      await this.assertCompanyAccess(callerUserId, callerRole, companyIdFilter);
+      if (!PLATFORM_FULL_ACCESS_ROLES.has(callerRole)) {
+        throw new ForbiddenException(
+          "No tienes permisos para listar usuarios de esta empresa",
+        );
+      }
       const members =
         await this.companyMemberRepository.findActiveByCompanyId(
           companyIdFilter,
@@ -51,57 +46,6 @@ export class GetUsersUseCase {
       return data;
     }
 
-    if (callerRole === Role.KAM) {
-      const companyIds =
-        await this.companyKamRepository.findCompanyIdsByUserId(callerUserId);
-      if (companyIds.length === 0) {
-        return [];
-      }
-      const memberLists = await Promise.all(
-        companyIds.map((companyId) =>
-          this.companyMemberRepository.findActiveByCompanyId(companyId),
-        ),
-      );
-      const userIds = new Set<string>();
-      for (const members of memberLists) {
-        for (const member of members) {
-          userIds.add(member.userId);
-        }
-      }
-      if (userIds.size === 0) {
-        return [];
-      }
-      const { data } = await this.userRepository.findMany({
-        where: { id: { in: Array.from(userIds) } },
-      });
-      return data;
-    }
-
     throw new ForbiddenException("No tienes permisos para listar usuarios");
-  }
-
-  private async assertCompanyAccess(
-    callerUserId: string,
-    callerRole: Role,
-    companyId: string,
-  ): Promise<void> {
-    if (PLATFORM_FULL_ACCESS_ROLES.has(callerRole)) {
-      return;
-    }
-    if (callerRole === Role.KAM) {
-      const isAssigned = await this.companyKamRepository.isAssignedToCompany(
-        callerUserId,
-        companyId,
-      );
-      if (!isAssigned) {
-        throw new ForbiddenException(
-          "No estás asignado como KAM de esta empresa",
-        );
-      }
-      return;
-    }
-    throw new ForbiddenException(
-      "No tienes permisos para listar usuarios de esta empresa",
-    );
   }
 }

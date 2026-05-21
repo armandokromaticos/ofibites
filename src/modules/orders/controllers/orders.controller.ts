@@ -45,7 +45,7 @@ export class OrdersController {
   ) {}
 
   @Post()
-  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.FINANCE_ADMIN, Role.CLIENT)
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
   @ApiOperation({ summary: "Crear orden con items" })
   async createOrder(
     @Body() dto: CreateOrderDto,
@@ -60,14 +60,7 @@ export class OrdersController {
   }
 
   @Get()
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.OPERATOR,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.OPERATOR, Role.CLIENT)
   @ApiOperation({
     summary:
       "Listar órdenes filtradas según rol y header X-Company-Id (opcional)",
@@ -93,14 +86,7 @@ export class OrdersController {
   }
 
   @Get(":id")
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.OPERATOR,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.OPERATOR, Role.CLIENT)
   @ApiOperation({ summary: "Obtener orden por ID" })
   async findOneOrder(
     @Param("id", ParseUUIDPipe) id: string,

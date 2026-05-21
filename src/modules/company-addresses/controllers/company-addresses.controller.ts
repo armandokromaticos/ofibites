@@ -56,13 +56,7 @@ export class CompanyAddressesController {
   }
 
   @Get()
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
   @ApiOperation({ summary: "Listar direcciones de la empresa" })
   async findAll(
     @Param("companyId", ParseUUIDPipe) companyId: string,
@@ -77,13 +71,7 @@ export class CompanyAddressesController {
   }
 
   @Get(":id")
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
   @ApiOperation({ summary: "Obtener dirección" })
   async findOne(
     @Param("companyId", ParseUUIDPipe) companyId: string,

@@ -47,15 +47,9 @@ export class CompaniesController {
   }
 
   @Get()
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
   @ApiOperation({
-    summary: "Listar empresas (admins ven todas; KAM/CLIENT solo asignadas)",
+    summary: "Listar empresas (admins ven todas; CLIENT solo asignadas)",
   })
   async findAll(
     @CurrentUser() user: { id: string; role: Role },
@@ -68,13 +62,7 @@ export class CompaniesController {
   }
 
   @Get(":id")
-  @Roles(
-    Role.SUPER_ADMIN,
-    Role.OPS_ADMIN,
-    Role.FINANCE_ADMIN,
-    Role.KAM,
-    Role.CLIENT,
-  )
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
   @ApiOperation({ summary: "Obtener empresa por ID" })
   async findOne(
     @Param("id", ParseUUIDPipe) id: string,

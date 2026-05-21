@@ -1,23 +1,15 @@
 import { ForbiddenException } from "@nestjs/common";
 import type { ICompanyMemberRepository } from "../../domain/repositories/company-member.repository.interface";
-import type { ICompanyKamRepository } from "../../domain/repositories/company-kam.repository.interface";
 import { Role } from "../../domain/enums/role.enum";
-
-const PLATFORM_FULL_ACCESS_ROLES: ReadonlySet<Role> = new Set([
-  Role.SUPER_ADMIN,
-  Role.OPS_ADMIN,
-  Role.FINANCE_ADMIN,
-]);
+import { PLATFORM_FULL_ACCESS_ROLES } from "./platform-roles.constants";
 
 export interface CompanyAccessDeps {
   companyMemberRepository: ICompanyMemberRepository;
-  companyKamRepository: ICompanyKamRepository;
 }
 
 /**
  * Asegura que el caller tiene acceso a la empresa indicada.
- * - SUPER_ADMIN/OPS_ADMIN/FINANCE_ADMIN: acceso global.
- * - KAM: debe estar asignado en CompanyKam.
+ * - SUPER_ADMIN/OPS_ADMIN: acceso global.
  * - CLIENT: debe ser CompanyMember activo.
  * - OPERATOR / cualquier otro rol: forbidden.
  */
@@ -28,17 +20,6 @@ export async function assertCompanyAccess(
   deps: CompanyAccessDeps,
 ): Promise<void> {
   if (PLATFORM_FULL_ACCESS_ROLES.has(callerRole)) {
-    return;
-  }
-
-  if (callerRole === Role.KAM) {
-    const isAssigned = await deps.companyKamRepository.isAssignedToCompany(
-      callerUserId,
-      companyId,
-    );
-    if (!isAssigned) {
-      throw new ForbiddenException("No tienes acceso a esta empresa");
-    }
     return;
   }
 

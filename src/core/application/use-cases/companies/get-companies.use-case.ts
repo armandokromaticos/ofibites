@@ -3,16 +3,9 @@ import type { ICompanyRepository } from "../../../domain/repositories/company.re
 import { COMPANY_REPOSITORY } from "../../../domain/repositories/company.repository.interface";
 import type { ICompanyMemberRepository } from "../../../domain/repositories/company-member.repository.interface";
 import { COMPANY_MEMBER_REPOSITORY } from "../../../domain/repositories/company-member.repository.interface";
-import type { ICompanyKamRepository } from "../../../domain/repositories/company-kam.repository.interface";
-import { COMPANY_KAM_REPOSITORY } from "../../../domain/repositories/company-kam.repository.interface";
 import { CompanyEntity } from "../../../domain/entities/company.entity";
 import { Role } from "../../../domain/enums/role.enum";
-
-const PLATFORM_FULL_ACCESS_ROLES: ReadonlySet<Role> = new Set([
-  Role.SUPER_ADMIN,
-  Role.OPS_ADMIN,
-  Role.FINANCE_ADMIN,
-]);
+import { PLATFORM_FULL_ACCESS_ROLES } from "../../shared/platform-roles.constants";
 
 @Injectable()
 export class GetCompaniesUseCase {
@@ -21,8 +14,6 @@ export class GetCompaniesUseCase {
     private readonly companyRepository: ICompanyRepository,
     @Inject(COMPANY_MEMBER_REPOSITORY)
     private readonly companyMemberRepository: ICompanyMemberRepository,
-    @Inject(COMPANY_KAM_REPOSITORY)
-    private readonly companyKamRepository: ICompanyKamRepository,
   ) {}
 
   async execute(
@@ -31,19 +22,6 @@ export class GetCompaniesUseCase {
   ): Promise<CompanyEntity[]> {
     if (PLATFORM_FULL_ACCESS_ROLES.has(callerRole)) {
       const { data } = await this.companyRepository.findMany({
-        orderBy: { createdAt: "desc" },
-      });
-      return data;
-    }
-
-    if (callerRole === Role.KAM) {
-      const companyIds =
-        await this.companyKamRepository.findCompanyIdsByUserId(callerUserId);
-      if (companyIds.length === 0) {
-        return [];
-      }
-      const { data } = await this.companyRepository.findMany({
-        where: { id: { in: companyIds } },
         orderBy: { createdAt: "desc" },
       });
       return data;
