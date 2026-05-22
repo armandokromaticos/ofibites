@@ -20,6 +20,7 @@ import { BranchesModule } from "./modules/branches/branches.module";
 import { DepartmentsModule } from "./modules/departments/departments.module";
 import { CompanyAddressesModule } from "./modules/company-addresses/company-addresses.module";
 import { CompanyMembersModule } from "./modules/company-members/company-members.module";
+import { CompanyRegistrationRequestsModule } from "./modules/company-registration-requests/company-registration-requests.module";
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { CompanyMembersModule } from "./modules/company-members/company-members.
     DepartmentsModule,
     CompanyAddressesModule,
     CompanyMembersModule,
+    CompanyRegistrationRequestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
