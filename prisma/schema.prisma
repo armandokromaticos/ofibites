@@ -298,15 +298,17 @@ enum CompanyRole {
 }
 
 model Company {
-  id         String   @id @default(uuid())
-  legalName  String   @map("legal_name")
-  taxId      String   @unique @map("tax_id")
-  email      String?
-  phone      String?
-  creditDays Int      @default(0) @map("credit_days")
-  isActive   Boolean  @default(true) @map("is_active")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(uuid())
+  legalName      String   @map("legal_name")
+  taxId          String   @unique @map("tax_id")
+  email          String?
+  phone          String?
+  fiscalName     String?  @map("fiscal_name")
+  fiscalAddress  String?  @map("fiscal_address")
+  creditDays     Int      @default(0) @map("credit_days")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   branches            Branch[]
   departments         Department[]
@@ -416,6 +418,7 @@ model CompanyRegistrationRequest {
   contactName       String                    @map("contact_name")
   contactEmail      String                    @map("contact_email")
   contactPhone      String                    @map("contact_phone")
+  position          String?
   employeeCount     Int?                      @map("employee_count")
   status            RegistrationRequestStatus @default(PENDING)
   rejectionReason   String?                   @map("rejection_reason")
