@@ -27,9 +27,16 @@ export class RejectCompanyRegistrationRequestUseCase {
     reviewerUserId: string,
     dto: RejectCompanyRegistrationRequestDto,
   ): Promise<CompanyRegistrationRequestEntity> {
+    const trimmedRejection = dto.rejectionReason?.trim();
+    if (!trimmedRejection) {
+      throw new BadRequestException(
+        "El motivo de rechazo no puede estar vacío.",
+      );
+    }
+
     const updated = await this.requestRepository.updateIfPending(id, {
       status: RegistrationRequestStatus.REJECTED,
-      rejectionReason: dto.rejectionReason.trim(),
+      rejectionReason: trimmedRejection,
       reviewedAt: new Date(),
       reviewedById: reviewerUserId,
     });
