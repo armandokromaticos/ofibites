@@ -9,6 +9,8 @@ import { ListCompanyRegistrationRequestsUseCase } from "../../core/application/u
 import { GetCompanyRegistrationRequestUseCase } from "../../core/application/use-cases/company-registration-requests/get-company-registration-request.use-case";
 import { UpdateCompanyRegistrationRequestUseCase } from "../../core/application/use-cases/company-registration-requests/update-company-registration-request.use-case";
 import { RejectCompanyRegistrationRequestUseCase } from "../../core/application/use-cases/company-registration-requests/reject-company-registration-request.use-case";
+import { ApproveCompanyRegistrationRequestUseCase } from "../../core/application/use-cases/company-registration-requests/approve-company-registration-request.use-case";
+import { ResendCompanyRegistrationRequestInviteUseCase } from "../../core/application/use-cases/company-registration-requests/resend-company-registration-request-invite.use-case";
 
 @Module({
   imports: [AuthModule, CompaniesModule],
@@ -23,6 +25,8 @@ import { RejectCompanyRegistrationRequestUseCase } from "../../core/application/
     GetCompanyRegistrationRequestUseCase,
     UpdateCompanyRegistrationRequestUseCase,
     RejectCompanyRegistrationRequestUseCase,
+    ApproveCompanyRegistrationRequestUseCase,
+    ResendCompanyRegistrationRequestInviteUseCase,
   ],
   exports: [COMPANY_REGISTRATION_REQUEST_REPOSITORY],
 })
