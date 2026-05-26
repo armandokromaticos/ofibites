@@ -1,4 +1,8 @@
-import { Inject, Injectable } from "@nestjs/common";
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from "@nestjs/common";
 import type { ICompanyRegistrationRequestRepository } from "../../../domain/repositories/company-registration-request.repository.interface";
 import { COMPANY_REGISTRATION_REQUEST_REPOSITORY } from "../../../domain/repositories/company-registration-request.repository.interface";
 import { CompanyRegistrationRequestEntity } from "../../../domain/entities/company-registration-request.entity";
@@ -34,11 +38,15 @@ export class ListCompanyRegistrationRequestsUseCase {
       take: pageSize,
     });
 
-    return {
-      data,
-      total: total ?? data.length,
-      page,
-      pageSize,
-    };
+    if (typeof total !== "number") {
+      // El repo siempre devuelve `total` cuando hay `skip`/`take`. Si llegó undefined
+      // es una violación del contrato — fallar explícito en vez de devolver un total
+      // engañoso (`data.length` daría conteos inconsistentes a partir de la página 2).
+      throw new InternalServerErrorException(
+        "El repositorio no devolvió un total para una consulta paginada.",
+      );
+    }
+
+    return { data, total, page, pageSize };
   }
 }

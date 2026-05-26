@@ -38,7 +38,7 @@ export class UpdateCompanyRegistrationRequestUseCase {
       );
     }
 
-    const data: Prisma.CompanyRegistrationRequestUpdateInput = {};
+    const data: Prisma.CompanyRegistrationRequestUpdateManyMutationInput = {};
 
     if (dto.legalName !== undefined) {
       data.legalName = dto.legalName.trim();
@@ -48,6 +48,8 @@ export class UpdateCompanyRegistrationRequestUseCase {
     if (dto.taxId !== undefined) {
       nextTaxId = dto.taxId.trim();
       if (nextTaxId !== current.taxId) {
+        // Best-effort: detecta conflicto con una Company ya existente. La constraint
+        // unique de Company.taxId enforza la garantía final al momento del approve.
         const companyWithTaxId = await this.companyRepository.findUnique({
           where: { taxId: nextTaxId },
         });
@@ -85,6 +87,10 @@ export class UpdateCompanyRegistrationRequestUseCase {
     const taxIdChanged = nextTaxId !== current.taxId;
     const emailChanged = nextContactEmail !== current.contactEmail;
     if (taxIdChanged || emailChanged) {
+      // Best-effort: el check contra APPROVED no puede ser exacto sin un índice
+      // único parcial (Prisma no lo expone declarativamente y el diseño permite
+      // PENDING/REJECTED duplicados). Race con un APPROVED concurrente es benigna:
+      // el approve posterior fallará por Company.taxId unique.
       const approvedDuplicate = await this.requestRepository.exists({
         where: {
           id: { not: id },
@@ -99,6 +105,19 @@ export class UpdateCompanyRegistrationRequestUseCase {
       }
     }
 
-    return this.requestRepository.update({ where: { id }, data });
+    const updated = await this.requestRepository.updateIfPending(id, data);
+    if (!updated) {
+      const existing = await this.requestRepository.findUnique({
+        where: { id },
+      });
+      if (!existing) {
+        throw new NotFoundException(`Solicitud ${id} no encontrada.`);
+      }
+      throw new BadRequestException(
+        `Solo se pueden editar solicitudes en estado PENDING (actual: ${existing.status}).`,
+      );
+    }
+
+    return updated;
   }
 }

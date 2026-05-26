@@ -27,26 +27,24 @@ export class RejectCompanyRegistrationRequestUseCase {
     reviewerUserId: string,
     dto: RejectCompanyRegistrationRequestDto,
   ): Promise<CompanyRegistrationRequestEntity> {
-    const current = await this.requestRepository.findUnique({ where: { id } });
-    if (!current) {
-      throw new NotFoundException(`Solicitud ${id} no encontrada.`);
-    }
+    const updated = await this.requestRepository.updateIfPending(id, {
+      status: RegistrationRequestStatus.REJECTED,
+      rejectionReason: dto.rejectionReason.trim(),
+      reviewedAt: new Date(),
+      reviewedById: reviewerUserId,
+    });
 
-    if (current.status !== RegistrationRequestStatus.PENDING) {
+    if (!updated) {
+      const existing = await this.requestRepository.findUnique({
+        where: { id },
+      });
+      if (!existing) {
+        throw new NotFoundException(`Solicitud ${id} no encontrada.`);
+      }
       throw new BadRequestException(
-        `Solo se pueden rechazar solicitudes en estado PENDING (actual: ${current.status}).`,
+        `Solo se pueden rechazar solicitudes en estado PENDING (actual: ${existing.status}).`,
       );
     }
-
-    const updated = await this.requestRepository.update({
-      where: { id },
-      data: {
-        status: RegistrationRequestStatus.REJECTED,
-        rejectionReason: dto.rejectionReason.trim(),
-        reviewedAt: new Date(),
-        reviewedBy: { connect: { id: reviewerUserId } },
-      },
-    });
 
     // TODO(C2.b): enviar email de rechazo al contacto con `rejectionReason` y CTA "Contacto con Ofibites".
     // Postergado hasta decidir proveedor de email transaccional (Supabase no envía emails arbitrarios).

@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma/prisma.service";
 import { ICompanyRegistrationRequestRepository } from "../../domain/repositories/company-registration-request.repository.interface";
 import { CompanyRegistrationRequestEntity } from "../../domain/entities/company-registration-request.entity";
+import { RegistrationRequestStatus } from "../../domain/enums/registration-request-status.enum";
 
 @Injectable()
 export class CompanyRegistrationRequestRepository implements ICompanyRegistrationRequestRepository {
@@ -59,5 +60,24 @@ export class CompanyRegistrationRequestRepository implements ICompanyRegistratio
   ): Promise<boolean> {
     const count = await this.prisma.companyRegistrationRequest.count(args);
     return count > 0;
+  }
+
+  async updateIfPending(
+    id: string,
+    data:
+      | Prisma.CompanyRegistrationRequestUpdateManyMutationInput
+      | Prisma.CompanyRegistrationRequestUncheckedUpdateManyInput,
+  ): Promise<CompanyRegistrationRequestEntity | null> {
+    const result = await this.prisma.companyRegistrationRequest.updateMany({
+      where: { id, status: RegistrationRequestStatus.PENDING },
+      data,
+    });
+    if (result.count === 0) {
+      return null;
+    }
+    const row = await this.prisma.companyRegistrationRequest.findUnique({
+      where: { id },
+    });
+    return row ? CompanyRegistrationRequestEntity.fromPrisma(row) : null;
   }
 }
