@@ -90,9 +90,12 @@ export class ApproveCompanyRegistrationRequestUseCase {
 
     const company = await this.createCompanyOrThrow(request);
 
-    const authId = await this.inviteOrRollback(email, request.contactName, dto, [
-      () => this.tryDeleteCompany(company.id),
-    ]);
+    const authId = await this.inviteOrRollback(
+      email,
+      request.contactName,
+      dto,
+      [() => this.tryDeleteCompany(company.id)],
+    );
 
     const createdUser = await this.createUserOrRollback(
       authId,
@@ -105,11 +108,16 @@ export class ApproveCompanyRegistrationRequestUseCase {
       ],
     );
 
-    await this.createMemberOrRollback(createdUser.id, company.id, request.position, [
-      () => this.tryDeleteUser(createdUser.id),
-      () => this.tryDeleteAuthUser(authId),
-      () => this.tryDeleteCompany(company.id),
-    ]);
+    await this.createMemberOrRollback(
+      createdUser.id,
+      company.id,
+      request.position,
+      [
+        () => this.tryDeleteUser(createdUser.id),
+        () => this.tryDeleteAuthUser(authId),
+        () => this.tryDeleteCompany(company.id),
+      ],
+    );
 
     const updated = await this.requestRepository.updateIfPending(id, {
       status: RegistrationRequestStatus.APPROVED,
@@ -286,7 +294,14 @@ export class ApproveCompanyRegistrationRequestUseCase {
   }
 
   private async tryDeleteAuthUser(authId: string): Promise<void> {
-    await this.supabaseService.getAdmin().auth.admin.deleteUser(authId);
+    const { error } = await this.supabaseService
+      .getAdmin()
+      .auth.admin.deleteUser(authId);
+    if (error) {
+      throw new Error(
+        `Supabase deleteUser falló para ${authId}: ${error.message}`,
+      );
+    }
   }
 
   private async tryDeleteUser(userId: string): Promise<void> {
@@ -297,11 +312,10 @@ export class ApproveCompanyRegistrationRequestUseCase {
     userId: string,
     companyId: string,
   ): Promise<void> {
-    const member =
-      await this.memberRepository.findActiveByUserAndCompany(
-        userId,
-        companyId,
-      );
+    const member = await this.memberRepository.findActiveByUserAndCompany(
+      userId,
+      companyId,
+    );
     if (member) {
       await this.memberRepository.delete(member.id);
     }
