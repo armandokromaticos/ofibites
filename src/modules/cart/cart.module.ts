@@ -1,12 +1,8 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
-import { CouponsModule } from "../coupons/coupons.module";
-import { BranchesModule } from "../branches/branches.module";
-import { DepartmentsModule } from "../departments/departments.module";
-import { CompanyAddressesModule } from "../company-addresses/company-addresses.module";
-import { OrdersController } from "./controllers/orders.controller";
-import { ORDER_REPOSITORY } from "../../core/domain/repositories/order.repository.interface";
-import { OrderRepository } from "../../core/infrastructure/repositories/order.repository";
+import { CartController } from "./controllers/cart.controller";
+import { CART_REPOSITORY } from "../../core/domain/repositories/cart.repository.interface";
+import { CartRepository } from "../../core/infrastructure/repositories/cart.repository";
 import { PRODUCT_REPOSITORY } from "../../core/domain/repositories/product.repository.interface";
 import { ProductRepository } from "../../core/infrastructure/repositories/product.repository";
 import { PRODUCT_SIZE_REPOSITORY } from "../../core/domain/repositories/product-size.repository.interface";
@@ -18,23 +14,18 @@ import { ProductModifierGroupRepository } from "../../core/infrastructure/reposi
 import { COMBO_REPOSITORY } from "../../core/domain/repositories/combo.repository.interface";
 import { ComboRepository } from "../../core/infrastructure/repositories/combo.repository";
 import { LineItemPricingService } from "../../core/application/services/line-item-pricing.service";
-import { CreateOrderUseCase } from "../../core/application/use-cases/orders/create-order.use-case";
-import { GetOrderUseCase } from "../../core/application/use-cases/orders/get-order.use-case";
-import { GetOrdersUseCase } from "../../core/application/use-cases/orders/get-orders.use-case";
-import { CancelOrderUseCase } from "../../core/application/use-cases/orders/cancel-order.use-case";
-import { UpdateOrderStatusUseCase } from "../../core/application/use-cases/orders/update-order-status.use-case";
+import { CartViewService } from "../../core/application/services/cart-view.service";
+import { GetCartUseCase } from "../../core/application/use-cases/cart/get-cart.use-case";
+import { AddCartItemUseCase } from "../../core/application/use-cases/cart/add-cart-item.use-case";
+import { UpdateCartItemUseCase } from "../../core/application/use-cases/cart/update-cart-item.use-case";
+import { RemoveCartItemUseCase } from "../../core/application/use-cases/cart/remove-cart-item.use-case";
+import { ClearCartUseCase } from "../../core/application/use-cases/cart/clear-cart.use-case";
 
 @Module({
-  imports: [
-    AuthModule,
-    CouponsModule,
-    BranchesModule,
-    DepartmentsModule,
-    CompanyAddressesModule,
-  ],
-  controllers: [OrdersController],
+  imports: [AuthModule],
+  controllers: [CartController],
   providers: [
-    { provide: ORDER_REPOSITORY, useClass: OrderRepository },
+    { provide: CART_REPOSITORY, useClass: CartRepository },
     { provide: PRODUCT_REPOSITORY, useClass: ProductRepository },
     { provide: PRODUCT_SIZE_REPOSITORY, useClass: ProductSizeRepository },
     {
@@ -47,11 +38,12 @@ import { UpdateOrderStatusUseCase } from "../../core/application/use-cases/order
     },
     { provide: COMBO_REPOSITORY, useClass: ComboRepository },
     LineItemPricingService,
-    CreateOrderUseCase,
-    GetOrderUseCase,
-    GetOrdersUseCase,
-    CancelOrderUseCase,
-    UpdateOrderStatusUseCase,
+    CartViewService,
+    GetCartUseCase,
+    AddCartItemUseCase,
+    UpdateCartItemUseCase,
+    RemoveCartItemUseCase,
+    ClearCartUseCase,
   ],
 })
-export class OrdersModule {}
+export class CartModule {}
