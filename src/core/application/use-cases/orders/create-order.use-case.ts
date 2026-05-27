@@ -7,16 +7,6 @@ import {
 } from "@nestjs/common";
 import type { IOrderRepository } from "../../../domain/repositories/order.repository.interface";
 import { ORDER_REPOSITORY } from "../../../domain/repositories/order.repository.interface";
-import type { IProductRepository } from "../../../domain/repositories/product.repository.interface";
-import { PRODUCT_REPOSITORY } from "../../../domain/repositories/product.repository.interface";
-import type { IProductSizeRepository } from "../../../domain/repositories/product-size.repository.interface";
-import { PRODUCT_SIZE_REPOSITORY } from "../../../domain/repositories/product-size.repository.interface";
-import type { IProductModifierRepository } from "../../../domain/repositories/product-modifier.repository.interface";
-import { PRODUCT_MODIFIER_REPOSITORY } from "../../../domain/repositories/product-modifier.repository.interface";
-import type { IProductModifierGroupRepository } from "../../../domain/repositories/product-modifier-group.repository.interface";
-import { PRODUCT_MODIFIER_GROUP_REPOSITORY } from "../../../domain/repositories/product-modifier-group.repository.interface";
-import type { IComboRepository } from "../../../domain/repositories/combo.repository.interface";
-import { COMBO_REPOSITORY } from "../../../domain/repositories/combo.repository.interface";
 import type { ICouponRepository } from "../../../domain/repositories/coupon.repository.interface";
 import { COUPON_REPOSITORY } from "../../../domain/repositories/coupon.repository.interface";
 import type { ICompanyMemberRepository } from "../../../domain/repositories/company-member.repository.interface";
@@ -31,10 +21,10 @@ import { CreateOrderDto } from "../../dto/orders/create-order.dto";
 import {
   OrderEntity,
   CreateOrderItemParams,
-  CreateOrderItemModifierParams,
 } from "../../../domain/entities/order.entity";
 import { CouponEntity } from "../../../domain/entities/coupon.entity";
 import { Role } from "../../../domain/enums/role.enum";
+import { LineItemPricingService } from "../../services/line-item-pricing.service";
 
 const PLATFORM_BYPASS_MEMBERSHIP_ROLES: ReadonlySet<Role> = new Set([
   Role.SUPER_ADMIN,
@@ -46,16 +36,7 @@ export class CreateOrderUseCase {
   constructor(
     @Inject(ORDER_REPOSITORY)
     private readonly orderRepository: IOrderRepository,
-    @Inject(PRODUCT_REPOSITORY)
-    private readonly productRepository: IProductRepository,
-    @Inject(PRODUCT_SIZE_REPOSITORY)
-    private readonly productSizeRepository: IProductSizeRepository,
-    @Inject(PRODUCT_MODIFIER_REPOSITORY)
-    private readonly productModifierRepository: IProductModifierRepository,
-    @Inject(PRODUCT_MODIFIER_GROUP_REPOSITORY)
-    private readonly productModifierGroupRepository: IProductModifierGroupRepository,
-    @Inject(COMBO_REPOSITORY)
-    private readonly comboRepository: IComboRepository,
+    private readonly lineItemPricingService: LineItemPricingService,
     @Inject(COUPON_REPOSITORY)
     private readonly couponRepository: ICouponRepository,
     @Inject(COMPANY_MEMBER_REPOSITORY)
@@ -78,103 +59,15 @@ export class CreateOrderUseCase {
     const items: CreateOrderItemParams[] = [];
 
     for (const itemDto of dto.items) {
-      const product = await this.productRepository.findUnique({
-        where: { id: itemDto.productId },
-      });
-      if (!product) {
-        throw new NotFoundException(
-          `Product with id ${itemDto.productId} not found`,
-        );
-      }
-
-      let unitPrice: number;
-
-      if (itemDto.comboId) {
-        const combo = await this.comboRepository.findUnique({
-          where: { id: itemDto.comboId },
-        });
-        if (!combo) {
-          throw new NotFoundException(
-            `Combo with id ${itemDto.comboId} not found`,
-          );
-        }
-        unitPrice = combo.price;
-      } else if (itemDto.productSizeId) {
-        const size = await this.productSizeRepository.findUnique({
-          where: { id: itemDto.productSizeId },
-        });
-        if (!size) {
-          throw new NotFoundException(
-            `ProductSize with id ${itemDto.productSizeId} not found`,
-          );
-        }
-        if (size.productId !== itemDto.productId) {
-          throw new BadRequestException(
-            `ProductSize ${itemDto.productSizeId} does not belong to product ${itemDto.productId}`,
-          );
-        }
-        unitPrice = size.price;
-      } else {
-        unitPrice = product.basePrice;
-      }
-
-      const modifiers: CreateOrderItemModifierParams[] = [];
-      let modifierTotal = 0;
-
-      if (itemDto.modifiers && itemDto.modifiers.length > 0) {
-        const modifierIds = itemDto.modifiers.map((m) => m.modifierId);
-        const sizePricesMap = itemDto.productSizeId
-          ? await this.productModifierRepository.findSizePricesBatch(
-              modifierIds,
-              itemDto.productSizeId,
-            )
-          : new Map<string, number>();
-
-        for (const modDto of itemDto.modifiers) {
-          const modifier = await this.productModifierRepository.findUnique({
-            where: { id: modDto.modifierId },
-          });
-          if (!modifier) {
-            throw new NotFoundException(
-              `ProductModifier with id ${modDto.modifierId} not found`,
-            );
-          }
-          const group = await this.productModifierGroupRepository.findUnique({
-            where: { id: modifier.groupId },
-          });
-          if (!group || group.productId !== itemDto.productId) {
-            throw new BadRequestException(
-              `ProductModifier ${modDto.modifierId} does not belong to product ${itemDto.productId}`,
-            );
-          }
-          if (modifier.sizeRestricted && itemDto.productSizeId) {
-            if (!sizePricesMap.has(modDto.modifierId)) {
-              throw new BadRequestException(
-                `Modifier ${modDto.modifierId} is not available for the selected size`,
-              );
-            }
-          }
-          const adj =
-            sizePricesMap.get(modDto.modifierId) ?? modifier.priceAdjustment;
-          modifierTotal += adj;
-          modifiers.push({
-            modifierId: modDto.modifierId,
-            priceAdjustment: adj,
-          });
-        }
-      }
-
-      const subtotal =
-        Math.round((unitPrice + modifierTotal) * itemDto.quantity * 100) / 100;
-
+      const priced = await this.lineItemPricingService.priceLineItem(itemDto);
       items.push({
         productId: itemDto.productId,
         productSizeId: itemDto.productSizeId,
         comboId: itemDto.comboId,
         quantity: itemDto.quantity,
-        unitPrice,
-        subtotal,
-        modifiers,
+        unitPrice: priced.unitPrice,
+        subtotal: priced.subtotal,
+        modifiers: priced.modifiers,
       });
     }
 
