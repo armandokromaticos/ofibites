@@ -112,18 +112,34 @@ export class LineItemPricingService {
           )
         : new Map<string, number>();
 
-      for (const modInput of inputModifiers) {
-        const modifier = await this.productModifierRepository.findUnique({
-          where: { id: modInput.modifierId },
+      // Batch para evitar N+1: un findMany de modifiers y otro de sus groups.
+      const { data: modifierList } =
+        await this.productModifierRepository.findMany({
+          where: { id: { in: modifierIds } },
         });
+      const modifiersById = new Map(
+        modifierList.map((modifier) => [modifier.id, modifier] as const),
+      );
+
+      const groupIds = [
+        ...new Set(modifierList.map((modifier) => modifier.groupId)),
+      ];
+      const { data: groupList } =
+        await this.productModifierGroupRepository.findMany({
+          where: { id: { in: groupIds } },
+        });
+      const groupsById = new Map(
+        groupList.map((group) => [group.id, group] as const),
+      );
+
+      for (const modInput of inputModifiers) {
+        const modifier = modifiersById.get(modInput.modifierId);
         if (!modifier) {
           throw new NotFoundException(
             `ProductModifier with id ${modInput.modifierId} not found`,
           );
         }
-        const group = await this.productModifierGroupRepository.findUnique({
-          where: { id: modifier.groupId },
-        });
+        const group = groupsById.get(modifier.groupId);
         if (!group || group.productId !== input.productId) {
           throw new BadRequestException(
             `ProductModifier ${modInput.modifierId} does not belong to product ${input.productId}`,

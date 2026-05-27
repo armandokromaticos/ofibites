@@ -58,6 +58,13 @@ export class CartRepository implements ICartRepository {
     });
   }
 
+  async incrementItemQuantity(itemId: string, delta: number): Promise<void> {
+    await this.prisma.cartItem.update({
+      where: { id: itemId },
+      data: { quantity: { increment: delta } },
+    });
+  }
+
   async removeItem(itemId: string): Promise<void> {
     await this.prisma.cartItem.delete({ where: { id: itemId } });
   }

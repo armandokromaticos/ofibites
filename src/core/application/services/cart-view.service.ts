@@ -27,18 +27,24 @@ export class CartViewService {
   }
 
   private async toResponse(cart: CartEntity): Promise<CartResponseDto> {
+    const pricedItems = await Promise.all(
+      cart.items.map((item) =>
+        this.lineItemPricingService.priceLineItem({
+          productId: item.productId,
+          productSizeId: item.productSizeId,
+          comboId: item.comboId,
+          quantity: item.quantity,
+          modifiers: item.modifierIds.map((modifierId) => ({ modifierId })),
+        }),
+      ),
+    );
+
     const items: CartItemResponseDto[] = [];
     let subtotal = 0;
     let totalUnits = 0;
 
-    for (const item of cart.items) {
-      const priced = await this.lineItemPricingService.priceLineItem({
-        productId: item.productId,
-        productSizeId: item.productSizeId,
-        comboId: item.comboId,
-        quantity: item.quantity,
-        modifiers: item.modifierIds.map((modifierId) => ({ modifierId })),
-      });
+    cart.items.forEach((item, index) => {
+      const priced = pricedItems[index];
 
       subtotal = Math.round((subtotal + priced.subtotal) * 100) / 100;
       totalUnits += item.quantity;
@@ -57,7 +63,7 @@ export class CartViewService {
         priceAdjustment: modifier.priceAdjustment,
       }));
       items.push(itemDto);
-    }
+    });
 
     const dto = new CartResponseDto();
     dto.id = cart.id;

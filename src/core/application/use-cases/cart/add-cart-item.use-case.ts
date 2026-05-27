@@ -43,9 +43,9 @@ export class AddCartItemUseCase {
     });
 
     if (existing) {
-      await this.cartRepository.updateItemQuantity(
+      await this.cartRepository.incrementItemQuantity(
         existing.id,
-        existing.quantity + dto.quantity,
+        dto.quantity,
       );
     } else {
       await this.cartRepository.addItem(cart.id, {

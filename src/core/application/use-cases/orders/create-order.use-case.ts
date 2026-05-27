@@ -56,20 +56,21 @@ export class CreateOrderUseCase {
   ): Promise<OrderEntity> {
     await this.validateCompanyContext(userId, userRole, dto);
 
-    const items: CreateOrderItemParams[] = [];
+    const pricedItems = await Promise.all(
+      dto.items.map((itemDto) =>
+        this.lineItemPricingService.priceLineItem(itemDto),
+      ),
+    );
 
-    for (const itemDto of dto.items) {
-      const priced = await this.lineItemPricingService.priceLineItem(itemDto);
-      items.push({
-        productId: itemDto.productId,
-        productSizeId: itemDto.productSizeId,
-        comboId: itemDto.comboId,
-        quantity: itemDto.quantity,
-        unitPrice: priced.unitPrice,
-        subtotal: priced.subtotal,
-        modifiers: priced.modifiers,
-      });
-    }
+    const items: CreateOrderItemParams[] = dto.items.map((itemDto, index) => ({
+      productId: itemDto.productId,
+      productSizeId: itemDto.productSizeId,
+      comboId: itemDto.comboId,
+      quantity: itemDto.quantity,
+      unitPrice: pricedItems[index].unitPrice,
+      subtotal: pricedItems[index].subtotal,
+      modifiers: pricedItems[index].modifiers,
+    }));
 
     const subtotal =
       Math.round(items.reduce((sum, item) => sum + item.subtotal, 0) * 100) /

@@ -25,6 +25,23 @@ class MutuallyExclusiveIdsConstraint implements ValidatorConstraintInterface {
   }
 }
 
+@ValidatorConstraint({ name: "UniqueModifierIds", async: false })
+class UniqueModifierIdsConstraint implements ValidatorConstraintInterface {
+  validate(value: unknown) {
+    if (!Array.isArray(value)) {
+      return true;
+    }
+    const ids = value
+      .map((modifier: CartItemModifierInputDto) => modifier?.modifierId)
+      .filter((id): id is string => typeof id === "string");
+    return new Set(ids).size === ids.length;
+  }
+
+  defaultMessage() {
+    return "modifiers must not contain duplicate modifierId";
+  }
+}
+
 export class CartItemModifierInputDto {
   @ApiProperty({ example: "uuid-of-modifier" })
   @IsUUID()
@@ -57,5 +74,6 @@ export class AddCartItemDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CartItemModifierInputDto)
+  @Validate(UniqueModifierIdsConstraint)
   modifiers?: CartItemModifierInputDto[];
 }

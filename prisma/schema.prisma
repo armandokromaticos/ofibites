@@ -522,7 +522,7 @@ model CartItemModifier {
   cartItem CartItem        @relation(fields: [cartItemId], references: [id], onDelete: Cascade)
   modifier ProductModifier @relation(fields: [modifierId], references: [id], onDelete: Cascade)
 
-  @@index([cartItemId])
+  @@unique([cartItemId, modifierId])
   @@map("cart_item_modifiers")
 }
 

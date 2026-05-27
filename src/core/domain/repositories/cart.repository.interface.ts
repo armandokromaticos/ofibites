@@ -23,6 +23,9 @@ export interface ICartRepository {
   findByCompanyId(companyId: string): Promise<CartEntity | null>;
   addItem(cartId: string, params: AddCartItemParams): Promise<void>;
   updateItemQuantity(itemId: string, quantity: number): Promise<void>;
+  // Incremento atómico (quantity = quantity + delta) para evitar lost updates
+  // al sumar a una línea existente desde requests concurrentes.
+  incrementItemQuantity(itemId: string, delta: number): Promise<void>;
   removeItem(itemId: string): Promise<void>;
   clear(cartId: string): Promise<void>;
 }
