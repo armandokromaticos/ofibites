@@ -26,6 +26,7 @@ import { GetOrderUseCase } from "../../core/application/use-cases/orders/get-ord
 import { GetOrdersUseCase } from "../../core/application/use-cases/orders/get-orders.use-case";
 import { CancelOrderUseCase } from "../../core/application/use-cases/orders/cancel-order.use-case";
 import { UpdateOrderStatusUseCase } from "../../core/application/use-cases/orders/update-order-status.use-case";
+import { RepeatOrderUseCase } from "../../core/application/use-cases/orders/repeat-order.use-case";
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { UpdateOrderStatusUseCase } from "../../core/application/use-cases/order
     GetOrdersUseCase,
     CancelOrderUseCase,
     UpdateOrderStatusUseCase,
+    RepeatOrderUseCase,
   ],
 })
 export class OrdersModule {}
