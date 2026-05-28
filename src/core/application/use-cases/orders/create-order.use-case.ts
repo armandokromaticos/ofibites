@@ -144,10 +144,8 @@ export class CreateOrderUseCase {
     userRole: Role,
     dto: CreateOrderDto,
   ): Promise<void> {
-    await assertCompanyActive(dto.companyId, {
-      companyRepository: this.companyRepository,
-    });
-
+    // Membership primero: un no-miembro recibe siempre el mismo 403 sin que
+    // se le filtre si la empresa existe o está activa.
     if (!PLATFORM_BYPASS_MEMBERSHIP_ROLES.has(userRole)) {
       const membership =
         await this.companyMemberRepository.findActiveByUserAndCompany(
@@ -158,6 +156,10 @@ export class CreateOrderUseCase {
         throw new ForbiddenException("No perteneces a esta empresa");
       }
     }
+
+    await assertCompanyActive(dto.companyId, {
+      companyRepository: this.companyRepository,
+    });
 
     const address = await this.companyAddressRepository.findUnique({
       where: { id: dto.deliveryAddressId },
