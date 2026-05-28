@@ -40,6 +40,9 @@ export interface ICompanyMemberRepository {
     companyId: string,
   ): Promise<CompanyMemberEntity | null>;
   findAllByUserIdWithRefs(userId: string): Promise<CompanyMembershipDetails[]>;
+  findAllByUserIdsWithRefs(
+    userIds: string[],
+  ): Promise<(CompanyMembershipDetails & { userId: string })[]>;
   findActiveCompanyIdsByUserId(userId: string): Promise<string[]>;
   findActiveByCompanyId(companyId: string): Promise<CompanyMemberEntity[]>;
   touchLastSeenIfStale(

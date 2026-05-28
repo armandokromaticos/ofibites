@@ -8,9 +8,36 @@ import {
 import { CompanyMemberEntity } from "../../domain/entities/company-member.entity";
 import { CompanyRole } from "../../domain/enums/company-role.enum";
 
+const MEMBERSHIP_REFS_INCLUDE = {
+  company: { select: { id: true, legalName: true, isActive: true } },
+  branch: { select: { id: true, name: true } },
+  department: { select: { id: true, name: true } },
+} as const satisfies Prisma.CompanyMemberInclude;
+
+type MemberWithRefs = Prisma.CompanyMemberGetPayload<{
+  include: typeof MEMBERSHIP_REFS_INCLUDE;
+}>;
+
 @Injectable()
 export class CompanyMemberRepository implements ICompanyMemberRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  private toMembershipDetails(row: MemberWithRefs): CompanyMembershipDetails {
+    return {
+      membershipId: row.id,
+      companyId: row.companyId,
+      companyName: row.company.legalName,
+      companyIsActive: row.company.isActive,
+      role: row.role as CompanyRole,
+      position: row.position,
+      branchId: row.branchId,
+      branchName: row.branch?.name ?? null,
+      departmentId: row.departmentId,
+      departmentName: row.department?.name ?? null,
+      canPayInvoices: row.canPayInvoices,
+      isActive: row.isActive,
+    };
+  }
 
   async create(entity: CompanyMemberEntity): Promise<CompanyMemberEntity> {
     const created = await this.prisma.companyMember.create({
@@ -81,27 +108,28 @@ export class CompanyMemberRepository implements ICompanyMemberRepository {
   ): Promise<CompanyMembershipDetails[]> {
     const rows = await this.prisma.companyMember.findMany({
       where: { userId },
-      include: {
-        company: { select: { id: true, legalName: true, isActive: true } },
-        branch: { select: { id: true, name: true } },
-        department: { select: { id: true, name: true } },
-      },
+      include: MEMBERSHIP_REFS_INCLUDE,
+      orderBy: { createdAt: "asc" },
+    });
+
+    return rows.map((row) => this.toMembershipDetails(row));
+  }
+
+  async findAllByUserIdsWithRefs(
+    userIds: string[],
+  ): Promise<(CompanyMembershipDetails & { userId: string })[]> {
+    if (userIds.length === 0) {
+      return [];
+    }
+    const rows = await this.prisma.companyMember.findMany({
+      where: { userId: { in: userIds } },
+      include: MEMBERSHIP_REFS_INCLUDE,
       orderBy: { createdAt: "asc" },
     });
 
     return rows.map((row) => ({
-      membershipId: row.id,
-      companyId: row.companyId,
-      companyName: row.company.legalName,
-      companyIsActive: row.company.isActive,
-      role: row.role as CompanyRole,
-      position: row.position,
-      branchId: row.branchId,
-      branchName: row.branch?.name ?? null,
-      departmentId: row.departmentId,
-      departmentName: row.department?.name ?? null,
-      canPayInvoices: row.canPayInvoices,
-      isActive: row.isActive,
+      userId: row.userId,
+      ...this.toMembershipDetails(row),
     }));
   }
 

@@ -24,6 +24,7 @@ import { CompanyRegistrationRequestsModule } from "./modules/company-registratio
 import { CartModule } from "./modules/cart/cart.module";
 import { CompanyOnboardingModule } from "./modules/company-onboarding/company-onboarding.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
+import { InvitationsModule } from "./modules/invitations/invitations.module";
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { DashboardModule } from "./modules/dashboard/dashboard.module";
     CartModule,
     CompanyOnboardingModule,
     DashboardModule,
+    InvitationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
