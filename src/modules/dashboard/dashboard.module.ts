@@ -5,6 +5,7 @@ import { DASHBOARD_REPOSITORY } from "../../core/domain/repositories/dashboard.r
 import { DashboardRepository } from "../../core/infrastructure/repositories/dashboard.repository";
 import { OrderVisibilityResolver } from "../../core/application/services/order-visibility.resolver";
 import { GetClientDashboardUseCase } from "../../core/application/use-cases/dashboard/get-client-dashboard.use-case";
+import { GetAdminDashboardUseCase } from "../../core/application/use-cases/dashboard/get-admin-dashboard.use-case";
 
 @Module({
   imports: [AuthModule],
@@ -13,6 +14,7 @@ import { GetClientDashboardUseCase } from "../../core/application/use-cases/dash
     { provide: DASHBOARD_REPOSITORY, useClass: DashboardRepository },
     OrderVisibilityResolver,
     GetClientDashboardUseCase,
+    GetAdminDashboardUseCase,
   ],
 })
 export class DashboardModule {}

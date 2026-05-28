@@ -14,3 +14,13 @@ export const ORDER_TERMINAL_STATUSES: readonly OrderStatus[] = [...TERMINAL];
 export const ORDER_IN_PROGRESS_STATUSES: readonly OrderStatus[] = Object.values(
   OrderStatus,
 ).filter((status) => !TERMINAL.has(status));
+
+// Facturación: ingreso comprometido (pedido confirmado en adelante). Proxy del
+// monto facturado hasta que exista el modelo Invoice (Fase E); cuando entre, se
+// reemplaza esta lista por la fuente real en un solo lugar.
+export const ORDER_BILLING_STATUSES: readonly OrderStatus[] = [
+  OrderStatus.CONFIRMED,
+  OrderStatus.IN_PREPARATION,
+  OrderStatus.IN_TRANSIT,
+  OrderStatus.DELIVERED,
+];

@@ -22,9 +22,53 @@ export interface ClientDashboardData {
   topOrders: TopOrderSummary[];
 }
 
+export interface RankedProduct {
+  productId: string;
+  name: string;
+  quantity: number;
+}
+
+export interface RankedCombo {
+  comboId: string;
+  name: string;
+  quantity: number;
+}
+
+export interface RankedCompany {
+  companyId: string;
+  name: string;
+  total: number;
+}
+
+export interface AdminDashboardData {
+  ordersToday: number;
+  inPreparation: number;
+  inTransit: number;
+  billingThisMonth: number;
+  ordersPerDay: OrdersPerDayPoint[];
+  topProducts: RankedProduct[];
+  topCombos: RankedCombo[];
+  top5Companies: RankedCompany[];
+}
+
+export interface DashboardMonthRange {
+  monthStart: Date;
+  monthEnd: Date;
+}
+
+export interface AdminDashboardRange extends DashboardMonthRange {
+  dayStart: Date;
+  dayEnd: Date;
+}
+
 export interface IDashboardRepository {
   getClientDashboard(
     visibility: OrderVisibilityFilter,
-    range: { monthStart: Date; monthEnd: Date },
+    range: DashboardMonthRange,
   ): Promise<ClientDashboardData>;
+
+  getAdminDashboard(
+    visibility: OrderVisibilityFilter,
+    range: AdminDashboardRange,
+  ): Promise<AdminDashboardData>;
 }
