@@ -28,12 +28,14 @@ import { CreateCompanyMemberDto } from "../../../core/application/dto/company-me
 import { InviteCompanyMemberDto } from "../../../core/application/dto/company-members/invite-company-member.dto";
 import { UpdateCompanyMemberDto } from "../../../core/application/dto/company-members/update-company-member.dto";
 import { CompanyMemberResponseDto } from "../../../core/application/dto/company-members/company-member-response.dto";
+import { ResendMemberInviteResponseDto } from "../../../core/application/dto/company-members/resend-member-invite-response.dto";
 import { CreateCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/create-company-member.use-case";
 import { InviteCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/invite-company-member.use-case";
 import { GetCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/get-company-member.use-case";
 import { GetCompanyMembersUseCase } from "../../../core/application/use-cases/company-members/get-company-members.use-case";
 import { UpdateCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/update-company-member.use-case";
 import { DeleteCompanyMemberUseCase } from "../../../core/application/use-cases/company-members/delete-company-member.use-case";
+import { ResendCompanyMemberInviteUseCase } from "../../../core/application/use-cases/company-members/resend-company-member-invite.use-case";
 
 @ApiTags("Company Members")
 @ApiBearerAuth()
@@ -47,6 +49,7 @@ export class CompanyMembersController {
     private readonly getAllUseCase: GetCompanyMembersUseCase,
     private readonly updateUseCase: UpdateCompanyMemberUseCase,
     private readonly deleteUseCase: DeleteCompanyMemberUseCase,
+    private readonly resendInviteUseCase: ResendCompanyMemberInviteUseCase,
   ) {}
 
   @Post()
@@ -98,6 +101,37 @@ export class CompanyMembersController {
   ): Promise<CompanyMemberResponseDto> {
     const member = await this.inviteUseCase.execute(companyId, dto);
     return CompanyMemberResponseDto.fromEntity(member);
+  }
+
+  @Post(":id/resend-invite")
+  @HttpCode(200)
+  @PlatformOrCompanyRole({
+    platformRoles: [Role.SUPER_ADMIN, Role.OPS_ADMIN],
+    companyRoles: [CompanyRole.COMPANY_ADMIN],
+  })
+  @ApiOperation({
+    summary:
+      "Reenviar invitación a un miembro pendiente (envía link para establecer contraseña vía Supabase).",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Invitación reenviada.",
+    type: ResendMemberInviteResponseDto,
+  })
+  @ApiResponse({ status: 404, description: "Miembro no encontrado." })
+  @ApiResponse({
+    status: 409,
+    description: "El usuario ya aceptó la invitación y tiene cuenta activa.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Supabase rechazó el envío por límite de tasa.",
+  })
+  async resendInvite(
+    @Param("companyId", ParseUUIDPipe) companyId: string,
+    @Param("id", ParseUUIDPipe) id: string,
+  ): Promise<ResendMemberInviteResponseDto> {
+    return this.resendInviteUseCase.execute(companyId, id);
   }
 
   @Get()
