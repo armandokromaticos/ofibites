@@ -19,7 +19,10 @@ export class SkippedOrderItemDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   comboId: string | null;
 
-  @ApiProperty({ enum: RepeatOrderOmissionReason, description: "Motivo de la omisión" })
+  @ApiProperty({
+    enum: RepeatOrderOmissionReason,
+    description: "Motivo de la omisión",
+  })
   reason: RepeatOrderOmissionReason;
 }
 
