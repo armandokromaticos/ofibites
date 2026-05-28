@@ -1,8 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
 import type { ICartRepository } from "../../../domain/repositories/cart.repository.interface";
 import { CART_REPOSITORY } from "../../../domain/repositories/cart.repository.interface";
+import type { ICompanyRepository } from "../../../domain/repositories/company.repository.interface";
+import { COMPANY_REPOSITORY } from "../../../domain/repositories/company.repository.interface";
 import { LineItemPricingService } from "../../services/line-item-pricing.service";
 import { CartViewService } from "../../services/cart-view.service";
+import { assertCompanyActive } from "../../shared/company-active.guard";
 import { AddCartItemDto } from "../../dto/cart/add-cart-item.dto";
 import { CartResponseDto } from "../../dto/cart/cart-response.dto";
 
@@ -11,6 +14,8 @@ export class AddCartItemUseCase {
   constructor(
     @Inject(CART_REPOSITORY)
     private readonly cartRepository: ICartRepository,
+    @Inject(COMPANY_REPOSITORY)
+    private readonly companyRepository: ICompanyRepository,
     private readonly lineItemPricingService: LineItemPricingService,
     private readonly cartView: CartViewService,
   ) {}
@@ -20,6 +25,10 @@ export class AddCartItemUseCase {
     userId: string,
     dto: AddCartItemDto,
   ): Promise<CartResponseDto> {
+    await assertCompanyActive(companyId, {
+      companyRepository: this.companyRepository,
+    });
+
     // Valida que la línea sea coherente contra el catálogo (mismo check que la
     // creación de orden); el precio se descarta porque el carrito no lo congela.
     await this.lineItemPricingService.priceLineItem({

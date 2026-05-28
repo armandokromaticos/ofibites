@@ -8,6 +8,8 @@ import type { IUserRepository } from "../../../domain/repositories/user.reposito
 import { USER_REPOSITORY } from "../../../domain/repositories/user.repository.interface";
 import type { ICompanyMemberRepository } from "../../../domain/repositories/company-member.repository.interface";
 import { COMPANY_MEMBER_REPOSITORY } from "../../../domain/repositories/company-member.repository.interface";
+import type { ICompanyRepository } from "../../../domain/repositories/company.repository.interface";
+import { COMPANY_REPOSITORY } from "../../../domain/repositories/company.repository.interface";
 import { LoginDto } from "../../dto/auth/login.dto";
 import { AuthResponseDto } from "../../dto/auth/auth-response.dto";
 import { SupabaseService } from "../../../infrastructure/supabase/supabase.service";
@@ -22,6 +24,8 @@ export class LoginUseCase {
     private readonly userRepository: IUserRepository,
     @Inject(COMPANY_MEMBER_REPOSITORY)
     private readonly memberRepository: ICompanyMemberRepository,
+    @Inject(COMPANY_REPOSITORY)
+    private readonly companyRepository: ICompanyRepository,
     private readonly supabaseService: SupabaseService,
   ) {}
 
@@ -72,6 +76,18 @@ export class LoginUseCase {
         );
         throw new UnauthorizedException(
           "Aún no tienes acceso a una empresa. Contacta al administrador de tu empresa.",
+        );
+      }
+
+      const { data: activeCompanies } = await this.companyRepository.findMany({
+        where: { id: { in: activeCompanyIds }, isActive: true },
+      });
+      if (activeCompanies.length === 0) {
+        this.logger.warn(
+          `Login bloqueado: User ${user.id} (CLIENT) sin empresas activas.`,
+        );
+        throw new UnauthorizedException(
+          "Tu empresa está desactivada. Contacta con Ofibites.",
         );
       }
     }

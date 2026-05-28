@@ -7,6 +7,8 @@ import {
 } from "@nestjs/common";
 import type { IOrderRepository } from "../../../domain/repositories/order.repository.interface";
 import { ORDER_REPOSITORY } from "../../../domain/repositories/order.repository.interface";
+import type { ICompanyRepository } from "../../../domain/repositories/company.repository.interface";
+import { COMPANY_REPOSITORY } from "../../../domain/repositories/company.repository.interface";
 import type { ICouponRepository } from "../../../domain/repositories/coupon.repository.interface";
 import { COUPON_REPOSITORY } from "../../../domain/repositories/coupon.repository.interface";
 import type { ICompanyMemberRepository } from "../../../domain/repositories/company-member.repository.interface";
@@ -25,6 +27,7 @@ import {
 import { CouponEntity } from "../../../domain/entities/coupon.entity";
 import { Role } from "../../../domain/enums/role.enum";
 import { LineItemPricingService } from "../../services/line-item-pricing.service";
+import { assertCompanyActive } from "../../shared/company-active.guard";
 
 const PLATFORM_BYPASS_MEMBERSHIP_ROLES: ReadonlySet<Role> = new Set([
   Role.SUPER_ADMIN,
@@ -36,6 +39,8 @@ export class CreateOrderUseCase {
   constructor(
     @Inject(ORDER_REPOSITORY)
     private readonly orderRepository: IOrderRepository,
+    @Inject(COMPANY_REPOSITORY)
+    private readonly companyRepository: ICompanyRepository,
     private readonly lineItemPricingService: LineItemPricingService,
     @Inject(COUPON_REPOSITORY)
     private readonly couponRepository: ICouponRepository,
@@ -139,6 +144,10 @@ export class CreateOrderUseCase {
     userRole: Role,
     dto: CreateOrderDto,
   ): Promise<void> {
+    await assertCompanyActive(dto.companyId, {
+      companyRepository: this.companyRepository,
+    });
+
     if (!PLATFORM_BYPASS_MEMBERSHIP_ROLES.has(userRole)) {
       const membership =
         await this.companyMemberRepository.findActiveByUserAndCompany(
