@@ -10,6 +10,7 @@ import { GetCompanyMemberUseCase } from "../../core/application/use-cases/compan
 import { GetCompanyMembersUseCase } from "../../core/application/use-cases/company-members/get-company-members.use-case";
 import { UpdateCompanyMemberUseCase } from "../../core/application/use-cases/company-members/update-company-member.use-case";
 import { DeleteCompanyMemberUseCase } from "../../core/application/use-cases/company-members/delete-company-member.use-case";
+import { ResendCompanyMemberInviteUseCase } from "../../core/application/use-cases/company-members/resend-company-member-invite.use-case";
 
 @Module({
   imports: [AuthModule, CompaniesModule, BranchesModule, DepartmentsModule],
@@ -21,6 +22,7 @@ import { DeleteCompanyMemberUseCase } from "../../core/application/use-cases/com
     GetCompanyMembersUseCase,
     UpdateCompanyMemberUseCase,
     DeleteCompanyMemberUseCase,
+    ResendCompanyMemberInviteUseCase,
   ],
 })
 export class CompanyMembersModule {}
