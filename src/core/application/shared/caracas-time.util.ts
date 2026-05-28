@@ -33,3 +33,17 @@ export function caracasMonthRange(now: Date = new Date()): {
   );
   return { monthStart, monthEnd };
 }
+
+/**
+ * Rango [dayStart, dayEnd) de "hoy" según el calendario de Caracas, pero con
+ * límites a medianoche UTC. Pensado para columnas `@db.Date` (p. ej.
+ * `Order.deliveryDate`), que Prisma persiste como medianoche UTC de esa fecha.
+ */
+export function caracasTodayDateRange(now: Date = new Date()): {
+  dayStart: Date;
+  dayEnd: Date;
+} {
+  const dayStart = new Date(`${toCaracasDateKey(now)}T00:00:00.000Z`);
+  const dayEnd = new Date(dayStart.getTime() + 24 * 60 * MS_PER_MINUTE);
+  return { dayStart, dayEnd };
+}
