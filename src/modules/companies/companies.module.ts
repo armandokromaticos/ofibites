@@ -7,6 +7,7 @@ import { CreateCompanyUseCase } from "../../core/application/use-cases/companies
 import { GetCompanyUseCase } from "../../core/application/use-cases/companies/get-company.use-case";
 import { GetCompaniesUseCase } from "../../core/application/use-cases/companies/get-companies.use-case";
 import { UpdateCompanyUseCase } from "../../core/application/use-cases/companies/update-company.use-case";
+import { SetCompanyActiveUseCase } from "../../core/application/use-cases/companies/set-company-active.use-case";
 import { DeleteCompanyUseCase } from "../../core/application/use-cases/companies/delete-company.use-case";
 
 @Module({
@@ -18,6 +19,7 @@ import { DeleteCompanyUseCase } from "../../core/application/use-cases/companies
     GetCompanyUseCase,
     GetCompaniesUseCase,
     UpdateCompanyUseCase,
+    SetCompanyActiveUseCase,
     DeleteCompanyUseCase,
   ],
   exports: [COMPANY_REPOSITORY],

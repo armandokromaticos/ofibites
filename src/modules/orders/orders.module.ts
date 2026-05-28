@@ -17,6 +17,8 @@ import { PRODUCT_MODIFIER_GROUP_REPOSITORY } from "../../core/domain/repositorie
 import { ProductModifierGroupRepository } from "../../core/infrastructure/repositories/product-modifier-group.repository";
 import { COMBO_REPOSITORY } from "../../core/domain/repositories/combo.repository.interface";
 import { ComboRepository } from "../../core/infrastructure/repositories/combo.repository";
+import { COMPANY_REPOSITORY } from "../../core/domain/repositories/company.repository.interface";
+import { CompanyRepository } from "../../core/infrastructure/repositories/company.repository";
 import { LineItemPricingService } from "../../core/application/services/line-item-pricing.service";
 import { CreateOrderUseCase } from "../../core/application/use-cases/orders/create-order.use-case";
 import { GetOrderUseCase } from "../../core/application/use-cases/orders/get-order.use-case";
@@ -46,6 +48,7 @@ import { UpdateOrderStatusUseCase } from "../../core/application/use-cases/order
       useClass: ProductModifierGroupRepository,
     },
     { provide: COMBO_REPOSITORY, useClass: ComboRepository },
+    { provide: COMPANY_REPOSITORY, useClass: CompanyRepository },
     LineItemPricingService,
     CreateOrderUseCase,
     GetOrderUseCase,

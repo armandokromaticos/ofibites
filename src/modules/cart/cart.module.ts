@@ -13,6 +13,8 @@ import { PRODUCT_MODIFIER_GROUP_REPOSITORY } from "../../core/domain/repositorie
 import { ProductModifierGroupRepository } from "../../core/infrastructure/repositories/product-modifier-group.repository";
 import { COMBO_REPOSITORY } from "../../core/domain/repositories/combo.repository.interface";
 import { ComboRepository } from "../../core/infrastructure/repositories/combo.repository";
+import { COMPANY_REPOSITORY } from "../../core/domain/repositories/company.repository.interface";
+import { CompanyRepository } from "../../core/infrastructure/repositories/company.repository";
 import { LineItemPricingService } from "../../core/application/services/line-item-pricing.service";
 import { CartViewService } from "../../core/application/services/cart-view.service";
 import { GetCartUseCase } from "../../core/application/use-cases/cart/get-cart.use-case";
@@ -37,6 +39,7 @@ import { ClearCartUseCase } from "../../core/application/use-cases/cart/clear-ca
       useClass: ProductModifierGroupRepository,
     },
     { provide: COMBO_REPOSITORY, useClass: ComboRepository },
+    { provide: COMPANY_REPOSITORY, useClass: CompanyRepository },
     LineItemPricingService,
     CartViewService,
     GetCartUseCase,

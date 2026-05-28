@@ -18,11 +18,13 @@ import { Roles } from "../../auth/decorators/roles.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateCompanyDto } from "../../../core/application/dto/companies/create-company.dto";
 import { UpdateCompanyDto } from "../../../core/application/dto/companies/update-company.dto";
+import { SetCompanyActiveDto } from "../../../core/application/dto/companies/set-company-active.dto";
 import { CompanyResponseDto } from "../../../core/application/dto/companies/company-response.dto";
 import { CreateCompanyUseCase } from "../../../core/application/use-cases/companies/create-company.use-case";
 import { GetCompanyUseCase } from "../../../core/application/use-cases/companies/get-company.use-case";
 import { GetCompaniesUseCase } from "../../../core/application/use-cases/companies/get-companies.use-case";
 import { UpdateCompanyUseCase } from "../../../core/application/use-cases/companies/update-company.use-case";
+import { SetCompanyActiveUseCase } from "../../../core/application/use-cases/companies/set-company-active.use-case";
 import { DeleteCompanyUseCase } from "../../../core/application/use-cases/companies/delete-company.use-case";
 
 @ApiTags("Companies")
@@ -35,6 +37,7 @@ export class CompaniesController {
     private readonly getCompanyUseCase: GetCompanyUseCase,
     private readonly getCompaniesUseCase: GetCompaniesUseCase,
     private readonly updateCompanyUseCase: UpdateCompanyUseCase,
+    private readonly setCompanyActiveUseCase: SetCompanyActiveUseCase,
     private readonly deleteCompanyUseCase: DeleteCompanyUseCase,
   ) {}
 
@@ -84,6 +87,23 @@ export class CompaniesController {
     @Body() dto: UpdateCompanyDto,
   ): Promise<CompanyResponseDto> {
     const company = await this.updateCompanyUseCase.execute(id, dto);
+    return CompanyResponseDto.fromEntity(company);
+  }
+
+  @Patch(":id/active")
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN)
+  @ApiOperation({
+    summary:
+      "Activar/desactivar empresa. Una empresa desactivada no puede crear pedidos, construir carrito ni sus miembros iniciar sesión.",
+  })
+  async setActive(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() dto: SetCompanyActiveDto,
+  ): Promise<CompanyResponseDto> {
+    const company = await this.setCompanyActiveUseCase.execute(
+      id,
+      dto.isActive,
+    );
     return CompanyResponseDto.fromEntity(company);
   }
 
