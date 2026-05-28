@@ -34,6 +34,7 @@ import { Role } from "../../../domain/enums/role.enum";
 import { LineItemPricingService } from "../../services/line-item-pricing.service";
 import { assertCompanyActive } from "../../shared/company-active.guard";
 import { RepeatOrderDto } from "../../dto/orders/repeat-order.dto";
+import { RepeatOrderOmissionReason } from "../../dto/orders/repeat-order-response.dto";
 
 const PLATFORM_BYPASS_MEMBERSHIP_ROLES: ReadonlySet<Role> = new Set([
   Role.SUPER_ADMIN,
@@ -43,7 +44,7 @@ const PLATFORM_BYPASS_MEMBERSHIP_ROLES: ReadonlySet<Role> = new Set([
 export interface SkippedOrderItem {
   productId: string;
   comboId: string | null;
-  reason: string;
+  reason: RepeatOrderOmissionReason;
 }
 
 export interface RepeatOrderResult {
@@ -201,7 +202,7 @@ export class RepeatOrderUseCase {
         skippedItems.push({
           productId: item.productId,
           comboId: item.comboId,
-          reason: "pricing_failed",
+          reason: RepeatOrderOmissionReason.PRICING_FAILED,
         });
       }
     }
@@ -214,33 +215,33 @@ export class RepeatOrderUseCase {
     productId: string;
     productSizeId: string | null;
     comboId: string | null;
-  }): Promise<string | null> {
+  }): Promise<RepeatOrderOmissionReason | null> {
     // priceLineItem siempre exige que el producto exista (los combos lo usan como
     // ancla), así que se valida primero. comboId y productSizeId son mutuamente
     // excluyentes (lo enforza priceLineItem).
     const product = await this.productRepository.findUnique({
       where: { id: item.productId },
     });
-    if (!product) return "product_not_found";
+    if (!product) return RepeatOrderOmissionReason.PRODUCT_NOT_FOUND;
 
     if (item.comboId) {
       // Un combo se gobierna por su propio isActive, no por el del producto ancla.
       const combo = await this.comboRepository.findUnique({
         where: { id: item.comboId },
       });
-      if (!combo) return "combo_not_found";
-      if (!combo.isActive) return "combo_inactive";
+      if (!combo) return RepeatOrderOmissionReason.COMBO_NOT_FOUND;
+      if (!combo.isActive) return RepeatOrderOmissionReason.COMBO_INACTIVE;
       return null;
     }
 
-    if (!product.isActive) return "product_inactive";
+    if (!product.isActive) return RepeatOrderOmissionReason.PRODUCT_INACTIVE;
 
     if (item.productSizeId) {
       const size = await this.productSizeRepository.findUnique({
         where: { id: item.productSizeId },
       });
-      if (!size) return "size_not_found";
-      if (!size.isActive) return "size_inactive";
+      if (!size) return RepeatOrderOmissionReason.SIZE_NOT_FOUND;
+      if (!size.isActive) return RepeatOrderOmissionReason.SIZE_INACTIVE;
     }
 
     return null;

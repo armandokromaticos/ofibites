@@ -1,6 +1,17 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { OrderResponseDto } from "./order-response.dto";
 
+/** Motivo por el que un ítem del pedido original se omitió al repetir. */
+export enum RepeatOrderOmissionReason {
+  PRODUCT_NOT_FOUND = "product_not_found",
+  PRODUCT_INACTIVE = "product_inactive",
+  SIZE_NOT_FOUND = "size_not_found",
+  SIZE_INACTIVE = "size_inactive",
+  COMBO_NOT_FOUND = "combo_not_found",
+  COMBO_INACTIVE = "combo_inactive",
+  PRICING_FAILED = "pricing_failed",
+}
+
 export class SkippedOrderItemDto {
   @ApiProperty()
   productId: string;
@@ -8,11 +19,8 @@ export class SkippedOrderItemDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   comboId: string | null;
 
-  @ApiProperty({
-    description:
-      "Motivo de la omisión: product_not_found | product_inactive | size_not_found | size_inactive | combo_not_found | combo_inactive | pricing_failed",
-  })
-  reason: string;
+  @ApiProperty({ enum: RepeatOrderOmissionReason, description: "Motivo de la omisión" })
+  reason: RepeatOrderOmissionReason;
 }
 
 export class RepeatOrderResponseDto {
