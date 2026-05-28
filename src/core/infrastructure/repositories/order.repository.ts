@@ -8,6 +8,7 @@ import {
 } from "../../domain/repositories/order.repository.interface";
 import { OrderEntity } from "../../domain/entities/order.entity";
 import { OrderStatus } from "../../domain/enums/order-status.enum";
+import { buildOrderVisibilityWhere } from "./order-visibility.where";
 
 @Injectable()
 export class OrderRepository implements IOrderRepository {
@@ -54,31 +55,7 @@ export class OrderRepository implements IOrderRepository {
   }
 
   async findVisible(filters: OrderListFilters): Promise<OrderEntity[]> {
-    const where: Prisma.OrderWhereInput = {};
-
-    switch (filters.visibility.type) {
-      case "all":
-        break;
-      case "byCompany":
-        where.companyId = filters.visibility.companyId;
-        break;
-      case "byCompanies":
-        if (filters.visibility.companyIds.length === 0) {
-          return [];
-        }
-        where.companyId = { in: filters.visibility.companyIds };
-        break;
-      case "byUserOrCompanies": {
-        const ors: Prisma.OrderWhereInput[] = [
-          { userId: filters.visibility.userId },
-        ];
-        if (filters.visibility.companyIds.length > 0) {
-          ors.push({ companyId: { in: filters.visibility.companyIds } });
-        }
-        where.OR = ors;
-        break;
-      }
-    }
+    const where = buildOrderVisibilityWhere(filters.visibility);
 
     if (filters.statuses && filters.statuses.length > 0) {
       where.status = { in: filters.statuses };
