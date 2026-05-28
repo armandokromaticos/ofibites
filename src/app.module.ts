@@ -22,6 +22,7 @@ import { CompanyAddressesModule } from "./modules/company-addresses/company-addr
 import { CompanyMembersModule } from "./modules/company-members/company-members.module";
 import { CompanyRegistrationRequestsModule } from "./modules/company-registration-requests/company-registration-requests.module";
 import { CartModule } from "./modules/cart/cart.module";
+import { CompanyOnboardingModule } from "./modules/company-onboarding/company-onboarding.module";
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { CartModule } from "./modules/cart/cart.module";
     CompanyMembersModule,
     CompanyRegistrationRequestsModule,
     CartModule,
+    CompanyOnboardingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

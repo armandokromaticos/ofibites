@@ -118,6 +118,10 @@ export class CompanyMembersController {
     description: "Invitación reenviada.",
     type: ResendMemberInviteResponseDto,
   })
+  @ApiResponse({
+    status: 400,
+    description: "Solicitud inválida (el miembro no tiene cuenta de Auth).",
+  })
   @ApiResponse({ status: 404, description: "Miembro no encontrado." })
   @ApiResponse({
     status: 409,

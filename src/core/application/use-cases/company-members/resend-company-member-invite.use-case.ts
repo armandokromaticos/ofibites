@@ -57,10 +57,13 @@ export class ResendCompanyMemberInviteUseCase {
     // Guard: si el usuario ya aceptó (email confirmado), no tiene sentido
     // reenviar. La verificación es best-effort: si falla, igual se reenvía.
     try {
-      const { data: authData } = await supabase.auth.admin.getUserById(
-        user.authId,
-      );
-      if (authData?.user?.email_confirmed_at) {
+      const { data: authData, error: lookupError } =
+        await supabase.auth.admin.getUserById(user.authId);
+      if (lookupError) {
+        this.logger.warn(
+          `No se pudo verificar el estado en Auth del member ${memberId}, se reenvía igual: ${lookupError.message}`,
+        );
+      } else if (authData?.user?.email_confirmed_at) {
         throw new ConflictException(
           "El usuario ya aceptó la invitación y tiene una cuenta activa.",
         );
@@ -70,14 +73,17 @@ export class ResendCompanyMemberInviteUseCase {
         throw err;
       }
       this.logger.warn(
-        `No se pudo verificar el estado en Auth de ${user.authId}, se reenvía igual: ${err instanceof Error ? err.message : String(err)}`,
+        `No se pudo verificar el estado en Auth del member ${memberId}, se reenvía igual: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
 
     const email = user.email.trim().toLowerCase();
+    const maskedEmail = this.maskEmail(email);
     const redirectTo = process.env.SUPABASE_INVITE_REDIRECT_URL?.trim();
 
-    this.logger.log(`Reenviando invitación a ${email} (member ${memberId})`);
+    this.logger.log(
+      `Reenviando invitación al member ${memberId} (${maskedEmail})`,
+    );
     // El usuario ya existe en Auth (lo creó el invite original), por lo que
     // inviteUserByEmail fallaría. Se reenvía vía recovery: el link permite
     // establecer la contraseña, completando el onboarding.
@@ -87,7 +93,7 @@ export class ResendCompanyMemberInviteUseCase {
 
     if (error) {
       this.logger.warn(
-        `Error en Supabase resetPasswordForEmail para ${email}: ${error.message} (code=${error.code ?? "?"})`,
+        `Error en Supabase resetPasswordForEmail para member ${memberId} (${maskedEmail}): ${error.message} (code=${error.code ?? "?"})`,
       );
       if (
         error.code === "over_email_send_rate_limit" ||
@@ -107,5 +113,14 @@ export class ResendCompanyMemberInviteUseCase {
       message:
         "Se reenvió la invitación vía Supabase. El usuario recibirá un email para establecer su contraseña.",
     };
+  }
+
+  /** Enmascara el email para logs sin filtrar PII: "j***@dominio.com". */
+  private maskEmail(email: string): string {
+    const [local, domain] = email.split("@");
+    if (!domain) {
+      return "***";
+    }
+    return `${local.slice(0, 1)}***@${domain}`;
   }
 }
