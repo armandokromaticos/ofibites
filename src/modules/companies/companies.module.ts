@@ -22,6 +22,6 @@ import { DeleteCompanyUseCase } from "../../core/application/use-cases/companies
     SetCompanyActiveUseCase,
     DeleteCompanyUseCase,
   ],
-  exports: [COMPANY_REPOSITORY],
+  exports: [COMPANY_REPOSITORY, CreateCompanyUseCase],
 })
 export class CompaniesModule {}

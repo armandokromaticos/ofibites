@@ -24,5 +24,6 @@ import { ResendCompanyMemberInviteUseCase } from "../../core/application/use-cas
     DeleteCompanyMemberUseCase,
     ResendCompanyMemberInviteUseCase,
   ],
+  exports: [InviteCompanyMemberUseCase],
 })
 export class CompanyMembersModule {}
