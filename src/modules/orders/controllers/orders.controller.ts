@@ -24,12 +24,15 @@ import { Roles } from "../../auth/decorators/roles.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CreateOrderDto } from "../../../core/application/dto/orders/create-order.dto";
 import { UpdateOrderStatusDto } from "../../../core/application/dto/orders/update-order-status.dto";
+import { RepeatOrderDto } from "../../../core/application/dto/orders/repeat-order.dto";
 import { OrderResponseDto } from "../../../core/application/dto/orders/order-response.dto";
+import { RepeatOrderResponseDto } from "../../../core/application/dto/orders/repeat-order-response.dto";
 import { CreateOrderUseCase } from "../../../core/application/use-cases/orders/create-order.use-case";
 import { GetOrderUseCase } from "../../../core/application/use-cases/orders/get-order.use-case";
 import { GetOrdersUseCase } from "../../../core/application/use-cases/orders/get-orders.use-case";
 import { CancelOrderUseCase } from "../../../core/application/use-cases/orders/cancel-order.use-case";
 import { UpdateOrderStatusUseCase } from "../../../core/application/use-cases/orders/update-order-status.use-case";
+import { RepeatOrderUseCase } from "../../../core/application/use-cases/orders/repeat-order.use-case";
 
 @ApiTags("Orders")
 @Controller("orders")
@@ -42,6 +45,7 @@ export class OrdersController {
     private readonly getOrdersUseCase: GetOrdersUseCase,
     private readonly cancelOrderUseCase: CancelOrderUseCase,
     private readonly updateOrderStatusUseCase: UpdateOrderStatusUseCase,
+    private readonly repeatOrderUseCase: RepeatOrderUseCase,
   ) {}
 
   @Post()
@@ -121,6 +125,29 @@ export class OrdersController {
       user.role,
     );
     return entity.toResponseDto();
+  }
+
+  @Post(":id/repeat")
+  @Roles(Role.SUPER_ADMIN, Role.OPS_ADMIN, Role.CLIENT)
+  @ApiOperation({
+    summary:
+      "Repetir un pedido: re-precia al catálogo actual y omite productos no disponibles",
+  })
+  async repeatOrder(
+    @Param("id", ParseUUIDPipe) id: string,
+    @Body() dto: RepeatOrderDto,
+    @CurrentUser() user: { id: string; role: Role },
+  ): Promise<RepeatOrderResponseDto> {
+    const { order, skippedItems } = await this.repeatOrderUseCase.execute(
+      id,
+      user.id,
+      user.role,
+      dto,
+    );
+    const response = new RepeatOrderResponseDto();
+    response.order = order.toResponseDto();
+    response.skippedItems = skippedItems;
+    return response;
   }
 
   private parseCompanyIdHeader(value: string | undefined): string | undefined {
