@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, MaxLength, MinLength } from "class-validator";
+import { IsString, Matches, MaxLength, MinLength } from "class-validator";
 
 export class AddSupportMessageDto {
   @ApiProperty({
@@ -9,5 +9,6 @@ export class AddSupportMessageDto {
   @IsString()
   @MinLength(1)
   @MaxLength(2000)
+  @Matches(/\S/, { message: "body must contain non-whitespace characters" })
   body: string;
 }
